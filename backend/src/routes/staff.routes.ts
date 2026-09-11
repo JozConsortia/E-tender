@@ -33,14 +33,14 @@ router.get('/audit', authenticate, authorize('ADMIN', 'AUDITOR'), (_req, res) =>
 router.get('/bec/evaluations', authenticate, authorize('BEC'), (req, res) => {
   syncTenderLifecycle()
   const activeTenders = new Set(tenders.filter((t) => t.status === 'EVALUATION').map((t) => t.id))
-  return res.json(applications.filter((a) => activeTenders.has(a.tenderId)))
+  return res.json(applications.filter((a) => activeTenders.has(a.tenderId) && a.status === 'SUBMITTED' && (a.missingMandatoryDocuments?.length ?? 0) === 0 && (a.validDocuments?.length ?? a.documents.length) > 0))
 })
 
 router.post('/bec/evaluations/:id', authenticate, authorize('BEC'), (req, res) => {
   syncTenderLifecycle()
   const application = applications.find((a) => a.id === req.params.id)
   const tender = application ? tenders.find((t) => t.id === application.tenderId) : undefined
-  if (!application || !tender || tender.status !== 'EVALUATION' || !['UNDER_EVALUATION', 'REVIEW_REQUIRED'].includes(application.status)) return res.status(400).json({ message: 'This application is not available for BEC evaluation.' })
+  if (!application || !tender || tender.status !== 'EVALUATION' || application.status !== 'SUBMITTED') return res.status(400).json({ message: 'This application is not available for BEC evaluation.' })
   const score = Math.max(0, Math.min(100, Math.round(Number(req.body?.score))))
   const note = String(req.body?.note ?? '').trim()
   if (!note || note.length < 10) return res.status(400).json({ message: 'A BEC rationale of at least 10 characters is required.' })

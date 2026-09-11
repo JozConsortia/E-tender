@@ -20,15 +20,14 @@ export default function TenderDetails() {
   const open = isTenderOpenForApplications(tender)
   const pastClosing = isTenderPastClosing(tender)
   const canApply = verified && open && !already
-  const missingMandatory = tender.requirements.filter((requirement) => requirement.mandatory && !files[requirement.id])
 
   const attach = (requirementId: string, title: string) => setFiles((current) => ({ ...current, [requirementId]: `${slug(title)}.pdf` }))
   const detach = (requirementId: string) => setFiles((current) => { const next = { ...current }; delete next[requirementId]; return next })
 
   const apply = async (event: FormEvent) => {
     event.preventDefault()
-    if (missingMandatory.length) { setError('Attach a supporting document for every mandatory requirement before submitting.'); return }
-    const documents = tender.requirements.filter((requirement) => files[requirement.id]).map((requirement) => files[requirement.id])
+    const documents = Object.values(files)
+    if (!documents.length) { setError('Attach at least one supporting document for AI validation.'); return }
     const result = await submitApplication(tender.id, currentUser?.organisation ?? '', documents)
     if (!result.ok) { setError(result.message ?? 'Your application could not be submitted.'); return }
     navigate('/applicant/outcomes')
@@ -61,10 +60,11 @@ export default function TenderDetails() {
           </div>)}
         </div>
         {error && <div className="error-box">{error}</div>}
+        <div className="notice info"><strong>AI document review</strong><span>The system will validate uploaded evidence, reject unmatched documents, and only send valid requirements to the BEC for review.</span></div>
         {already ? <div className="success-box">You already submitted this tender. The final outcome will appear in Outcomes.</div>
           : !verified ? <div className="muted">Application access is unavailable until company verification is complete.</div>
           : !open ? <div className="muted">Applications are closed or the tender is no longer accepting submissions.</div>
-          : <button className="button primary full large" type="submit" disabled={missingMandatory.length > 0}>Submit application</button>}
+          : <button className="button primary full large" type="submit">Submit application</button>}
       </form>
     </div>
   </>

@@ -62,4 +62,32 @@ router.post('/:id/publish', authenticate, authorize('ADMIN'), (req, res) => {
     addAudit(req.user.name, 'Published tender', tender.reference);
     return res.json(tender);
 });
+router.post('/:id/advance', authenticate, authorize('ADMIN'), (req, res) => {
+    const tender = tenders.find((item) => item.id === req.params.id);
+    if (!tender)
+        return res.status(404).json({ message: 'Tender not found.' });
+    const nextStatus = (() => {
+        switch (tender.status) {
+            case 'DRAFT':
+                return 'PUBLISHED';
+            case 'PUBLISHED':
+                return 'EVALUATION';
+            case 'EVALUATION':
+                return 'ADJUDICATION';
+            case 'ADJUDICATION':
+                return 'APPROVAL';
+            case 'APPROVAL':
+                return 'AWARDED';
+            default:
+                return tender.status;
+        }
+    })();
+    if (nextStatus === tender.status) {
+        return res.status(400).json({ message: 'This tender is already at the final available demo stage.' });
+    }
+    tender.status = nextStatus;
+    addAudit(req.user.name, `Advanced tender to ${nextStatus}`, tender.reference);
+    syncTenderLifecycle();
+    return res.json(tender);
+});
 export default router;

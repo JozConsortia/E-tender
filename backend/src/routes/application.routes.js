@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { applications, users, tenders } from '../data/store.js';
 import { authenticate, authorize } from '../middleware/auth.js';
+import { validateSubmittedDocuments } from '../services/ai.service.js';
 import { addAudit, syncTenderLifecycle } from '../services/workflow.service.js';
 const router = Router();
 const validDoc = (name) => /\.(pdf|jpe?g|png)$/i.test(name);
@@ -27,15 +28,30 @@ router.post('/', authenticate, authorize('APPLICANT'), (req, res) => {
         return res.status(403).json({ message: 'This company cannot apply because a staff member is registered as its director.' });
     if (!Array.isArray(documents) || !documents.length || !documents.every((d) => typeof d === 'string' && validDoc(d)))
         return res.status(400).json({ message: 'Attach valid supporting documents (PDF, JPG or PNG).' });
-    const mandatoryCount = tender.requirements.filter((r) => r.mandatory).length;
-    if (documents.length < mandatoryCount)
-        return res.status(400).json({ message: 'Attach a supporting document for every mandatory requirement.' });
     if (applications.some((item) => item.tenderId === tenderId && item.applicantId === req.user.id))
         return res.status(409).json({ message: 'You have already applied for this tender.' });
-    const application = { id: `a-${Date.now()}`, tenderId: tender.id, tenderReference: tender.reference, tenderTitle: tender.title, companyName: organisation, applicantId: req.user.id, submittedAt: new Date().toISOString(), status: 'SUBMITTED', documents: documents.map(String) };
+    const validation = validateSubmittedDocuments(documents.map(String), tender);
+    const canProceedToBec = validation.missingMandatoryDocuments.length === 0 && validation.validDocuments.length > 0;
+    const application = {
+        id: `a-${Date.now()}`,
+        tenderId: tender.id,
+        tenderReference: tender.reference,
+        tenderTitle: tender.title,
+        companyName: organisation,
+        applicantId: req.user.id,
+        submittedAt: new Date().toISOString(),
+        status: canProceedToBec ? 'SUBMITTED' : 'REVIEW_REQUIRED',
+        documents: documents.map(String),
+        validDocuments: validation.validDocuments,
+        rejectedDocuments: validation.rejectedDocuments,
+        missingMandatoryDocuments: validation.missingMandatoryDocuments,
+        aiScore: validation.aiScore,
+        aiRecommendation: validation.aiRecommendation,
+        aiSummary: validation.aiSummary,
+    };
     applications.unshift(application);
     tender.applications += 1;
-    addAudit(req.user.name, 'Submitted application', tender.reference);
+    addAudit(req.user.name, canProceedToBec ? 'Submitted application for review' : 'Submitted application with AI rejection flags', tender.reference);
     return res.status(201).json(application);
 });
 router.get('/all', authenticate, authorize('ADMIN', 'AUDITOR'), (req, res) => {
