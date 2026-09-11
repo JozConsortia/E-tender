@@ -44,13 +44,14 @@ A user only ever sees the workspace for their own role (enforced both by fronten
 
 ```text
 DRAFT --(admin publishes)--> PUBLISHED --(closing date passes, or admin advances)--> EVALUATION
-  --(all bids scored)--> ADJUDICATION --(BAC approves)--> APPROVAL --(Approver approves)--> AWARDED
+  --(every application resolved)--> ADJUDICATION --(BAC approves)--> APPROVAL --(Approver approves)--> AWARDED
 
 Application: SUBMITTED -> UNDER_EVALUATION -> SHORTLISTED -> SUCCESSFUL / UNSUCCESSFUL
-                                            \-> REVIEW_REQUIRED (AI flagged missing/invalid evidence, or BAC returned it)
+                       \                                  \-> REVIEW_REQUIRED --(BEC re-scores)--> SHORTLISTED / REVIEW_REQUIRED
+                        \-> UNSUCCESSFUL (rejected instantly at submission if mandatory evidence is missing)
 ```
 
-The tender and its applications advance together — a tender only reaches ADJUDICATION once every one of its applications has been scored by the BEC, and only reaches AWARDED once the Approver signs off. `POST /api/tenders/:id/advance` lets an admin force the next transition in a demo/testing context without waiting for a real closing date.
+The tender and its applications advance together — a tender only reaches ADJUDICATION once every one of its applications has reached a resolved state (`SHORTLISTED`, `REVIEW_REQUIRED`, `SUCCESSFUL` or `UNSUCCESSFUL`), and only reaches AWARDED once the Approver signs off. An application rejected at submission (missing mandatory evidence) or scored below 70 by BEC does **not** block sibling bids on the same tender from proceeding. `POST /api/tenders/:id/advance` lets an admin force the next transition in a demo/testing context without waiting for a real closing date.
 
 ## Applicant bid form
 
@@ -60,7 +61,7 @@ Submitting a bid requires:
 - **Compliance declaration** (checkbox — bidder confirms compliance with tender terms)
 - One attached document per published requirement (PDF/JPG/PNG)
 
-On submission, a lightweight keyword-matching AI check compares attached document filenames against the tender's published requirements, rejects unmatched documents, and flags the application for manual review if any mandatory requirement is missing evidence. BEC, BAC and the Approver can each open a print-friendly **bid report** (`/applications/:id/report`) showing the full form, documents, and AI/committee notes — "Print / Save as PDF" uses the browser's native print dialog.
+On submission, a lightweight keyword-matching AI check compares attached document filenames against the tender's published requirements. If any mandatory requirement has no matching evidence, the application is **rejected immediately** — status `UNSUCCESSFUL`, with the missing items recorded — and the applicant sees this as a final outcome straight away (My Applications / Outcomes) rather than waiting on a committee. If all mandatory evidence is present, the bid proceeds normally into the evaluation pipeline. BEC, BAC and the Approver can each open a print-friendly **bid report** (`/applications/:id/report`) showing the full form, documents, and AI/committee notes — "Print / Save as PDF" uses the browser's native print dialog.
 
 ## AI Document Assessment (admin tool)
 

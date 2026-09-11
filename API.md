@@ -19,7 +19,7 @@ All endpoints except the public ones below require `Authorization: Bearer <token
 ## Applicant
 
 - `GET /applications/mine` — the applicant's own submissions.
-- `POST /applications` — submit a bid for an open, published tender. Body: `{ tenderId, companyName, documents: string[], bidSummary, technicalApproach, deliveryTimeline, pricingAmount, complianceDeclaration: true }`. Requires an APPROVED verification status; blocks (and alerts) on a director conflict; flags (without blocking) if a document filename duplicates one from another company.
+- `POST /applications` — submit a bid for an open, published tender. Body: `{ tenderId, companyName, documents: string[], bidSummary, technicalApproach, deliveryTimeline, pricingAmount, complianceDeclaration: true }`. Requires an APPROVED verification status; blocks (and alerts) on a director conflict; flags (without blocking) if a document filename duplicates one from another company. If any mandatory tender requirement has no matching document, the created application is immediately `UNSUCCESSFUL` (a final outcome) rather than proceeding to evaluation.
 
 ## Administrator
 
@@ -45,8 +45,8 @@ All endpoints except the public ones below require `Authorization: Bearer <token
 
 ## BEC
 
-- `GET /bec/evaluations` — bids ready for scoring (tender in EVALUATION, application `UNDER_EVALUATION`, all mandatory evidence present).
-- `POST /bec/evaluations/:id` — `{ score, note }` (note ≥10 chars) — records the score; ≥70 shortlists the bid for BAC, otherwise flags it `REVIEW_REQUIRED`.
+- `GET /bec/evaluations` — bids ready for scoring: tender in EVALUATION, application `UNDER_EVALUATION` (first time up) or `REVIEW_REQUIRED` (previously scored below 70, or returned by BAC), with all mandatory evidence present.
+- `POST /bec/evaluations/:id` — `{ score, note }` (note ≥10 chars) — records the score; ≥70 shortlists the bid for BAC, otherwise sets/keeps it `REVIEW_REQUIRED` so BEC can re-score it later.
 
 ## BAC
 
