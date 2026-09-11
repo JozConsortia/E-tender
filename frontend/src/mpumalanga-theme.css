@@ -1,0 +1,1745 @@
+:root {
+  --navy: #003b5c;
+  --navy2: #005b87;
+  --gold: #f2b233;
+  --line: #dbe5eb;
+  --muted: #5e6d78;
+  --green: #007a3d;
+  --green-bg: #e7f4ec;
+  --blue: #0066a1;
+  --blue-bg: #e8f2f8;
+}
+
+body {
+  background: #f4f7f8;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #003b5c 0%, #005b87 100%);
+  border-right: 4px solid var(--gold);
+}
+
+.brand-mark {
+  background: linear-gradient(135deg, #f7c84b, #e8a51e);
+}
+
+.nav-item.active {
+  color: #003b5c;
+  box-shadow: inset 4px 0 0 var(--gold);
+}
+
+.button.primary {
+  background: #007a3d;
+  border-color: #007a3d;
+}
+
+.button.primary:hover {
+  background: #006333;
+  border-color: #006333;
+}
+
+.button.secondary {
+  color: #005b87;
+  border-color: #8fb5c7;
+}
+
+.button.secondary:hover {
+  background: #e8f2f8;
+  border-color: #0066a1;
+}
+
+.hero-card {
+  background: linear-gradient(145deg, #003b5c, #005b87);
+  border-top: 5px solid var(--gold);
+}
+
+.hero h1 em {
+  color: #c48700;
+}
+
+.pill,
+.secure-badge {
+  background: #e7f4ec;
+  color: #006333;
+}
+
+.status-badge.success,
+.notice.success {
+  background: var(--green-bg);
+  color: #006333;
+}
+
+.status-dot {
+  background: #56c271;
+}
+
+.topbar {
+  border-top: 4px solid var(--gold);
+}
+
+.landing {
+  background: radial-gradient(circle at 85% 15%, #d9edf5 0, transparent 28%), linear-gradient(180deg, #fbfdfd 0, #f1f6f8 100%);
+}
+
+.landing .button.primary {
+  background: #0066a1;
+  border-color: #0066a1;
+}
+
+/* Shared portal polish */
+.button {
+  border-radius: 8px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px #003b5c1c;
+}
+
+.login-page {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e7f2f6 0%, #f8fbfc 52%, #f4f7f8 100%);
+}
+
+.login-page::before,
+.login-page::after {
+  position: absolute;
+  content: '';
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.login-page::before {
+  width: 420px;
+  height: 420px;
+  top: -180px;
+  right: -130px;
+  background: #f2b23322;
+}
+
+.login-page::after {
+  width: 360px;
+  height: 360px;
+  bottom: -190px;
+  left: -150px;
+  background: #0066a114;
+}
+
+.login-panel {
+  position: relative;
+  z-index: 1;
+  border: 1px solid #cddde4;
+  border-top: 5px solid var(--gold);
+  border-radius: 18px;
+  box-shadow: 0 28px 70px #003b5c1c;
+}
+
+.login-panel .brand {
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e1eaee;
+}
+
+.login-panel .brand strong {
+  color: var(--navy);
+  font-size: 16px;
+}
+
+.login-copy h1 {
+  letter-spacing: -.025em;
+}
+
+.login-form label {
+  color: #365466;
+}
+
+.login-form input:not([type='file']),
+.login-form select,
+.login-form textarea {
+  border-color: #cbdbe2;
+  border-radius: 8px;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.login-form input:not([type='file']):focus,
+.login-form select:focus,
+.login-form textarea:focus {
+  outline: 0;
+  border-color: #0066a1;
+  background: #fff;
+  box-shadow: 0 0 0 3px #0066a11c;
+}
+
+.app-shell {
+  background: #f4f7f8;
+}
+
+.main-content {
+  background: linear-gradient(180deg, #f8fbfc 0, #f1f5f6 100%);
+}
+
+.topbar {
+  background: #fff;
+  box-shadow: 0 4px 16px #003b5c08;
+}
+
+.page-content {
+  max-width: 1440px;
+}
+
+.page-header {
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  letter-spacing: -.02em;
+}
+
+.page-header p {
+  color: #6a7b84;
+}
+
+.card,
+.stat-card {
+  border-color: #d6e2e7;
+  box-shadow: 0 10px 26px #003b5c09;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.tender-card,
+.outcome-card {
+  border: 1px solid #d6e2e7;
+  border-top: 3px solid #8fb5c7;
+  border-radius: 12px;
+  box-shadow: 0 10px 26px #003b5c09;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.tender-card:hover,
+.outcome-card:hover {
+  transform: translateY(-2px);
+  border-color: #8fb5c7;
+  box-shadow: 0 16px 32px #003b5c16;
+}
+
+.tender-card .card-head {
+  background: transparent;
+}
+
+.tender-card h3,
+.outcome-card h3 {
+  letter-spacing: -.01em;
+}
+
+.tender-meta span {
+  border: 1px solid #e0eaee;
+  background: #f5fafb;
+}
+
+.card-head {
+  background: #fbfdfe;
+}
+
+.card-head p {
+  line-height: 1.5;
+}
+
+.form-card input,
+.form-card textarea,
+.form-card select,
+.approval-card textarea,
+.verification-card textarea {
+  border-color: #cbdbe2;
+  border-radius: 8px;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.form-card input:focus,
+.form-card textarea:focus,
+.form-card select:focus,
+.approval-card textarea:focus,
+.verification-card textarea:focus {
+  outline: 0;
+  border-color: #0066a1;
+  background: #fff;
+  box-shadow: 0 0 0 3px #0066a11c;
+}
+
+.requirement-list,
+.criteria-list {
+  border-color: #d6e2e7;
+}
+
+.requirement-list div,
+.criteria-list div,
+.score-row {
+  border-color: #e1eaee;
+}
+
+.mini-metrics div {
+  border: 1px solid #dbe7eb;
+  background: #f5fafb;
+  border-radius: 8px;
+}
+
+.big-score {
+  color: var(--green);
+}
+
+.page-header .button {
+  flex-shrink: 0;
+}
+
+.form-actions {
+  align-items: center;
+  gap: 10px;
+}
+
+.decision-note {
+  display: grid;
+  gap: 7px;
+  margin-top: 18px;
+  color: #365466;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.decision-note textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 11px 12px;
+  border: 1px solid #cbdbe2;
+  border-radius: 8px;
+  background: #fbfdfe;
+  resize: vertical;
+}
+
+.decision-records {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.decision-records > div {
+  padding: 12px 14px;
+  border-left: 3px solid var(--gold);
+  border-radius: 7px;
+  background: #f5fafb;
+}
+
+.decision-records span {
+  color: #496879;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.decision-records p {
+  margin: 5px 0 0;
+  color: #405967;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.stat-card {
+  border-top: 3px solid #8fb5c7;
+  border-radius: 10px;
+}
+
+.stat-card strong {
+  color: var(--navy);
+}
+
+.table-card {
+  overflow: hidden;
+}
+
+table thead {
+  background: #eef5f7;
+}
+
+table th {
+  color: #496879;
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+
+table tbody tr:hover {
+  background: #f4fafb;
+}
+
+.form-card,
+.approval-card,
+.verification-card {
+  border-top: 3px solid #8fb5c7;
+}
+
+.notice {
+  border: 1px solid #d4e2e7;
+  border-radius: 9px;
+}
+
+.status-badge {
+  border-radius: 6px;
+  letter-spacing: .04em;
+}
+
+.text-link {
+  color: #0066a1;
+  font-weight: 700;
+}
+
+.text-link:hover {
+  color: #003b5c;
+}
+
+.audit-tools {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+}
+
+.audit-tools label {
+  display: grid;
+  gap: 6px;
+  width: min(440px, 100%);
+  color: #365466;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.audit-tools input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbdbe2;
+  border-radius: 8px;
+  background: #fbfdfe;
+}
+
+.audit-tools input:focus {
+  outline: 0;
+  border-color: #0066a1;
+  box-shadow: 0 0 0 3px #0066a11c;
+}
+
+@media (max-width: 560px) {
+  .audit-tools {
+    display: grid;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    border-right-width: 3px;
+  }
+
+  .sidebar .brand-mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .topbar-meta {
+    display: none;
+  }
+
+  .page-header .button {
+    width: 100%;
+  }
+
+  .table-card {
+    margin-left: -2px;
+    margin-right: -2px;
+  }
+
+  .tender-card,
+  .outcome-card,
+  .card {
+    border-radius: 10px;
+  }
+
+  .form-actions {
+    flex-wrap: wrap;
+  }
+
+  .form-actions .button {
+    flex: 1 1 150px;
+  }
+}
+
+.demo-accounts {
+  margin-top: 24px;
+  padding: 16px 0 0;
+  border-top: 1px solid #e1eaee;
+}
+
+.account-row {
+  border-color: #d8e4e9;
+  background: #f8fbfc;
+  border-radius: 8px;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.account-row:hover {
+  border-color: #8fb5c7;
+  background: #eef7fa;
+  transform: translateX(2px);
+}
+
+.role-chip {
+  border-color: #8fb5c733;
+  background: #ffffff12;
+}
+
+.empty-state {
+  border: 1px dashed #aac2cc;
+  border-radius: 12px;
+  background: #f8fbfc;
+}
+
+.timeline-item {
+  border-left-color: #8fb5c7;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    padding: 18px 18px 16px;
+  }
+
+  .page-content {
+    padding: 20px 16px 32px;
+  }
+
+  .page-header {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .page-header .button {
+    white-space: nowrap;
+  }
+}
+
+.signup-panel {
+  width: min(620px, 100%);
+}
+
+.signup-panel .login-copy h1 {
+  max-width: 100%;
+}
+
+.upload-box {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid #c8d8e1;
+  border-left: 4px solid var(--gold);
+  border-radius: 12px;
+  background: #f7fafb;
+}
+
+.upload-box > strong {
+  color: var(--navy);
+  font: 700 14px 'Space Grotesk';
+}
+
+.upload-box > small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.upload-box label {
+  display: grid;
+  gap: 7px;
+  padding: 11px 12px;
+  border: 1px solid #d9e4e9;
+  border-radius: 9px;
+  background: #fff;
+  color: #365466;
+  font-size: 11px;
+}
+
+.upload-box label input[type='file'] {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.upload-box label input[type='file']::file-selector-button {
+  margin-right: 8px;
+  padding: 7px 9px;
+  border: 1px solid #8fb5c7;
+  border-radius: 7px;
+  background: #e8f2f8;
+  color: #005b87;
+  font: 700 10px 'DM Sans';
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .login-page {
+    display: block;
+    padding: 12px;
+  }
+
+  .login-panel,
+  .signup-panel {
+    width: 100%;
+    padding: 22px 18px;
+    border-radius: 14px;
+  }
+
+  .login-copy {
+    margin: 24px 0 18px;
+  }
+
+  .signup-panel .login-copy h1 {
+    font-size: 28px;
+    line-height: 1.1;
+  }
+
+  .upload-box {
+    padding: 12px;
+  }
+
+  .upload-box label input[type='file']::file-selector-button {
+    display: block;
+    margin: 0 0 6px;
+  }
+}
+
+/* Added for CreateTender mandatory/optional toggle and admin tender actions */
+.inline-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #365466;
+  white-space: nowrap;
+}
+
+.inline-checkbox input {
+  width: auto;
+}
+
+.dynamic-row {
+  flex-wrap: wrap;
+}
+
+.action-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Added for click-to-attach document rows (Signup, TenderDetails) */
+.attach-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #d9e4e9;
+  border-radius: 9px;
+  background: #fff;
+  margin-bottom: 8px;
+}
+
+.attach-row > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #365466;
+}
+
+.attach-row .required-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #005b87;
+  background: #e8f2f8;
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-bg);
+  color: #006333;
+  border: 1px solid #bfe3cd;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.file-chip button {
+  border: 0;
+  background: transparent;
+  color: #006333;
+  font-weight: 800;
+  cursor: pointer;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   MPUMALANGA TREASURY LANDING PAGE
+   Landing-page styles only
+   ========================================================= */
+
+.treasury-landing {
+  min-height: 100vh;
+  color: var(--navy);
+  background:
+    radial-gradient(circle at 88% 7%, #d8edf6 0, transparent 24%),
+    linear-gradient(180deg, #fbfdfd 0%, #f3f7f8 52%, #eef4f6 100%);
+}
+
+/* -------------------------
+   Navigation
+   ------------------------- */
+
+.treasury-landing .treasury-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 78px;
+  padding: 14px 5vw;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #dbe6ea;
+  box-shadow: 0 5px 18px #003b5c0a;
+  backdrop-filter: blur(10px);
+}
+
+.treasury-landing .landing-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.treasury-landing .landing-brand .brand-mark {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f7c84b, #e8a51e);
+  color: #17394a;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 16px #8f6a171f;
+}
+
+.treasury-landing .landing-brand strong {
+  display: block;
+  color: var(--navy);
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.treasury-landing .landing-brand small {
+  display: block;
+  margin-top: 3px;
+  color: #6b7c85;
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.treasury-landing .landing-nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 22px;
+}
+
+.treasury-landing .landing-nav-links > a:not(.button) {
+  color: #496879;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.treasury-landing .landing-nav-links > a:not(.button):hover {
+  color: var(--navy);
+}
+
+/* -------------------------
+   Government banner
+   ------------------------- */
+
+.treasury-landing .government-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 11px 5vw;
+  background: var(--navy);
+  color: #fff;
+  border-bottom: 4px solid var(--gold);
+}
+
+.treasury-landing .government-banner > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.treasury-landing .banner-label {
+  padding-right: 14px;
+  border-right: 1px solid #ffffff33;
+  color: #dcecf2;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.treasury-landing .government-banner strong {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.treasury-landing .banner-status {
+  color: #f7d77d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* -------------------------
+   Hero
+   ------------------------- */
+
+.treasury-landing .treasury-hero {
+  width: min(1320px, calc(100% - 10vw));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(390px, 0.92fr);
+  align-items: center;
+  gap: clamp(40px, 6vw, 90px);
+  padding: 82px 0 72px;
+}
+
+.treasury-landing .hero-copy {
+  max-width: 720px;
+}
+
+.treasury-landing .pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 7px 11px;
+  border: 1px solid #badbc9;
+  border-radius: 999px;
+  background: var(--green-bg);
+  color: #006333;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.treasury-landing .hero h1 {
+  max-width: 720px;
+  margin: 18px 0 20px;
+  color: var(--navy);
+  font-size: clamp(44px, 5vw, 72px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.treasury-landing .hero h1 em {
+  display: block;
+  color: #c48700;
+  font-style: normal;
+}
+
+.treasury-landing .hero-copy > p {
+  max-width: 670px;
+  margin: 0;
+  color: #506b79;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.treasury-landing .hero-copy .hero-description {
+  margin-top: 13px;
+  color: #6b7e88;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.treasury-landing .hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 11px;
+  margin-top: 28px;
+}
+
+.treasury-landing .hero-actions .button {
+  min-height: 46px;
+}
+
+.treasury-landing .hero-actions .button.primary {
+  background: #0066a1;
+  border-color: #0066a1;
+}
+
+.treasury-landing .hero-actions .button.primary:hover {
+  background: #005785;
+  border-color: #005785;
+}
+
+.treasury-landing .hero-actions .button.secondary {
+  background: #fff;
+}
+
+.treasury-landing .hero-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.treasury-landing .hero-meta span {
+  position: relative;
+  padding-left: 15px;
+  color: #6d7e87;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.treasury-landing .hero-meta span::before {
+  position: absolute;
+  content: '';
+  width: 6px;
+  height: 6px;
+  top: 50%;
+  left: 0;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: #56c271;
+}
+
+/* -------------------------
+   Portal preview card
+   ------------------------- */
+
+.treasury-landing .treasury-card {
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: linear-gradient(150deg, #003b5c 0%, #005b87 100%);
+  border: 1px solid #0b688f;
+  border-top: 5px solid var(--gold);
+  border-radius: 18px;
+  box-shadow:
+    0 28px 65px #003b5c29,
+    0 10px 26px #003b5c16;
+}
+
+.treasury-landing .treasury-card::after {
+  position: absolute;
+  content: '';
+}
+
+.treasury-landing .treasury-card .hero-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid #ffffff17;
+  background: #00355455;
+}
+
+.treasury-landing .card-kicker {
+  display: block;
+  margin-bottom: 5px;
+  color: #b6d7e5;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.treasury-landing .treasury-card .hero-card-head strong {
+  display: block;
+  color: #fff;
+  font-size: 14px;
+}
+
+.treasury-landing .secure-badge {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border: 1px solid #d0ecdb;
+  border-radius: 999px;
+  background: #e7f4ec;
+  color: #006333;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.treasury-landing .portal-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 18px 18px 0;
+  overflow: hidden;
+  border: 1px solid #ffffff14;
+  border-radius: 10px;
+  background: #ffffff10;
+}
+
+.treasury-landing .summary-item {
+  min-width: 0;
+  padding: 14px 12px;
+}
+
+.treasury-landing .summary-item + .summary-item {
+  border-left: 1px solid #ffffff14;
+}
+
+.treasury-landing .summary-item span {
+  display: block;
+  margin-bottom: 5px;
+  color: #b2cfdb;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.treasury-landing .summary-item strong {
+  color: #fff;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+.treasury-landing .portal-section-title {
+  padding: 20px 20px 10px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.treasury-landing .tender-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 18px 8px;
+  padding: 12px 13px;
+  border: 1px solid #ffffff12;
+  border-radius: 9px;
+  background: #ffffff0b;
+}
+
+.treasury-landing .tender-preview > div {
+  min-width: 0;
+}
+
+.treasury-landing .tender-preview small {
+  display: block;
+  margin-bottom: 3px;
+  color: #a8cbd9;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.treasury-landing .tender-preview strong {
+  display: block;
+  overflow: hidden;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.treasury-landing .tender-status {
+  flex: 0 0 auto;
+  padding: 5px 7px;
+  border: 1px solid #ffffff1a;
+  border-radius: 999px;
+  color: #d7eef5;
+  background: #ffffff0c;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.treasury-landing .portal-footer {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 15px;
+  padding: 15px 20px 17px;
+  border-top: 1px solid #ffffff12;
+  color: #b4d0dc;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+/* -------------------------
+   General landing sections
+   ------------------------- */
+
+.treasury-landing .official-section,
+.treasury-landing .supplier-section {
+  width: min(1320px, calc(100% - 10vw));
+  margin: 0 auto;
+  padding: 78px 0;
+}
+
+.treasury-landing .official-section + .official-section,
+.treasury-landing .supplier-section + .official-section {
+  border-top: 1px solid #dce6ea;
+}
+
+.treasury-landing .section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 460px);
+  align-items: end;
+  gap: 50px;
+  margin-bottom: 34px;
+}
+
+.treasury-landing .eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #007a3d;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.treasury-landing .section-heading h2 {
+  max-width: 720px;
+  margin: 0;
+  color: var(--navy);
+  font-size: clamp(31px, 3.3vw, 46px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.treasury-landing .section-heading > p {
+  margin: 0;
+  color: #607681;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+/* -------------------------
+   Information cards
+   ------------------------- */
+
+.treasury-landing .information-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.treasury-landing .information-card {
+  position: relative;
+  min-height: 255px;
+  padding: 25px;
+  overflow: hidden;
+  border: 1px solid #d6e3e8;
+  border-top: 3px solid #8fb5c7;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 10px 28px #003b5c0b;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.treasury-landing .information-card::after {
+  position: absolute;
+  content: '';
+  width: 120px;
+  height: 120px;
+  right: -50px;
+  bottom: -55px;
+  border-radius: 50%;
+  background: #e8f2f8;
+  pointer-events: none;
+}
+
+.treasury-landing .information-card:hover {
+  transform: translateY(-3px);
+  border-color: #8fb5c7;
+  box-shadow: 0 17px 34px #003b5c15;
+}
+
+.treasury-landing .card-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 31px;
+  height: 31px;
+  margin-bottom: 22px;
+  border-radius: 8px;
+  background: #eef5f7;
+  color: #005b87;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.treasury-landing .information-card h3 {
+  margin: 0 0 10px;
+  color: var(--navy);
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.treasury-landing .information-card p {
+  max-width: 430px;
+  margin: 0 0 20px;
+  color: #657983;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.treasury-landing .information-card a {
+  position: relative;
+  z-index: 1;
+  color: #0066a1;
+  font-size: 10px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.treasury-landing .information-card a:hover {
+  color: var(--navy);
+}
+
+/* -------------------------
+   Supplier section
+   ------------------------- */
+
+.treasury-landing .supplier-section {
+  padding-bottom: 88px;
+}
+
+.treasury-landing .supplier-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #cddfe6;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 36px #003b5c0d;
+}
+
+.treasury-landing .supplier-panel-main {
+  padding: 36px;
+  background:
+    radial-gradient(circle at 90% 20%, #0d71972c 0, transparent 32%),
+    linear-gradient(145deg, #003b5c, #005b87);
+}
+
+.treasury-landing .supplier-panel-main .pill {
+  margin-bottom: 18px;
+}
+
+.treasury-landing .supplier-panel-main h3 {
+  max-width: 600px;
+  margin: 0 0 14px;
+  color: #fff;
+  font-size: clamp(25px, 3vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.treasury-landing .supplier-panel-main p {
+  max-width: 620px;
+  margin: 0;
+  color: #c3dce5;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.treasury-landing .supplier-panel-main .button {
+  margin-top: 22px;
+  background: #fff;
+  border-color: #fff;
+  color: #005b87;
+}
+
+.treasury-landing .supplier-panel-main .button:hover {
+  background: #f4fafb;
+  border-color: #f4fafb;
+  color: var(--navy);
+}
+
+.treasury-landing .supplier-features {
+  display: grid;
+  align-content: center;
+  gap: 0;
+  padding: 24px 28px;
+}
+
+.treasury-landing .supplier-features > div {
+  display: grid;
+  gap: 6px;
+  padding: 19px 0;
+}
+
+.treasury-landing .supplier-features > div + div {
+  border-top: 1px solid #e1eaee;
+}
+
+.treasury-landing .supplier-features strong {
+  color: var(--navy);
+  font-size: 11px;
+}
+
+.treasury-landing .supplier-features span {
+  color: #687c86;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+/* -------------------------
+   Procurement roles
+   ------------------------- */
+
+.treasury-landing .role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.treasury-landing .role-grid > div {
+  min-height: 170px;
+  padding: 21px;
+  border: 1px solid #d7e3e8;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 22px #003b5c08;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.treasury-landing .role-grid > div:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px #003b5c12;
+}
+
+.treasury-landing .role-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 39px;
+  height: 27px;
+  margin-bottom: 17px;
+  border-radius: 6px;
+  background: #e8f2f8;
+  color: #005b87;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.treasury-landing .role-grid b {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--navy);
+  font-size: 13px;
+}
+
+.treasury-landing .role-grid p {
+  margin: 0;
+  color: #667b85;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+/* -------------------------
+   Principles
+   ------------------------- */
+
+.treasury-landing .principles-section {
+  padding: 82px 5vw;
+  background: #003b5c;
+  border-top: 4px solid var(--gold);
+}
+
+.treasury-landing .principles-inner {
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 80px;
+  align-items: start;
+}
+
+.treasury-landing .principles-section .eyebrow {
+  color: #f5c956;
+}
+
+.treasury-landing .principles-section h2 {
+  max-width: 520px;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(31px, 3.5vw, 48px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.treasury-landing .principles-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid #ffffff15;
+  border-radius: 12px;
+  background: #ffffff15;
+}
+
+.treasury-landing .principles-list > div {
+  min-height: 155px;
+  padding: 22px;
+  background: #034663;
+}
+
+.treasury-landing .principles-list strong {
+  display: block;
+  margin-bottom: 9px;
+  color: #fff;
+  font-size: 12px;
+}
+
+.treasury-landing .principles-list span {
+  display: block;
+  color: #b8d2dd;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+/* -------------------------
+   Footer
+   ------------------------- */
+
+.treasury-landing .treasury-footer {
+  padding: 42px 5vw 18px;
+  background: #002e47;
+  color: #fff;
+}
+
+.treasury-landing .treasury-footer .footer-brand {
+  width: min(1320px, 100%);
+  margin: 0 auto;
+}
+
+.treasury-landing .treasury-footer .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.treasury-landing .treasury-footer .brand-mark {
+  width: 41px;
+  height: 41px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #f7c84b, #e8a51e);
+  color: #17394a;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.treasury-landing .treasury-footer .brand strong {
+  display: block;
+  color: #fff;
+  font-size: 12px;
+}
+
+.treasury-landing .treasury-footer .brand small {
+  display: block;
+  margin-top: 3px;
+  color: #9fc0ce;
+  font-size: 9px;
+}
+
+.treasury-landing .footer-brand > p {
+  max-width: 600px;
+  margin: 15px 0 26px;
+  color: #9ebbc7;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.treasury-landing .footer-links {
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, 180px);
+  gap: 35px;
+  padding: 23px 0;
+  border-top: 1px solid #ffffff14;
+}
+
+.treasury-landing .footer-links > div {
+  display: grid;
+  gap: 8px;
+}
+
+.treasury-landing .footer-links strong {
+  margin-bottom: 3px;
+  color: #f4c957;
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.treasury-landing .footer-links a {
+  color: #a9c4cf;
+  font-size: 9px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.treasury-landing .footer-links a:hover {
+  color: #fff;
+}
+
+.treasury-landing .footer-bottom {
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #ffffff14;
+  color: #799daa;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+/* -------------------------
+   Responsive
+   ------------------------- */
+
+@media (max-width: 1080px) {
+  .treasury-landing .treasury-hero {
+    grid-template-columns: 1fr;
+    max-width: 850px;
+  }
+
+  .treasury-landing .hero-copy {
+    max-width: 760px;
+  }
+
+  .treasury-landing .treasury-card {
+    max-width: 760px;
+  }
+
+  .treasury-landing .information-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .treasury-landing .information-card {
+    min-height: auto;
+  }
+
+  .treasury-landing .role-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .treasury-landing .principles-inner {
+    grid-template-columns: 1fr;
+    gap: 38px;
+  }
+}
+
+@media (max-width: 860px) {
+  .treasury-landing .treasury-nav {
+    padding: 13px 22px;
+  }
+
+  .treasury-landing .landing-nav-links > a:not(.button) {
+    display: none;
+  }
+
+  .treasury-landing .government-banner {
+    padding: 11px 22px;
+  }
+
+  .treasury-landing .treasury-hero,
+  .treasury-landing .official-section,
+  .treasury-landing .supplier-section {
+    width: min(100% - 44px, 760px);
+  }
+
+  .treasury-landing .section-heading {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .treasury-landing .supplier-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .treasury-landing .principles-section {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .treasury-landing .treasury-footer {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .treasury-landing .treasury-nav {
+    min-height: 70px;
+  }
+
+  .treasury-landing .landing-brand strong {
+    font-size: 12px;
+  }
+
+  .treasury-landing .landing-brand small {
+    font-size: 8px;
+  }
+
+  .treasury-landing .landing-brand .brand-mark {
+    width: 41px;
+    height: 41px;
+  }
+
+  .treasury-landing .landing-nav-links .button {
+    padding: 9px 13px;
+    font-size: 10px;
+  }
+
+  .treasury-landing .government-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .treasury-landing .banner-label {
+    font-size: 8px;
+  }
+
+  .treasury-landing .treasury-hero {
+    padding-top: 52px;
+    padding-bottom: 55px;
+  }
+
+  .treasury-landing .hero h1 {
+    font-size: clamp(38px, 12vw, 54px);
+  }
+
+  .treasury-landing .hero-copy > p {
+    font-size: 13px;
+  }
+
+  .treasury-landing .hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .treasury-landing .hero-actions .button {
+    width: 100%;
+  }
+
+  .treasury-landing .hero-meta {
+    display: grid;
+    gap: 9px;
+  }
+
+  .treasury-landing .portal-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .treasury-landing .summary-item + .summary-item {
+    border-top: 1px solid #ffffff14;
+    border-left: 0;
+  }
+
+  .treasury-landing .tender-preview {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .treasury-landing .role-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .treasury-landing .principles-list {
+    grid-template-columns: 1fr;
+  }
+
+  .treasury-landing .supplier-panel-main {
+    padding: 27px 22px;
+  }
+
+  .treasury-landing .supplier-features {
+    padding: 15px 22px;
+  }
+
+  .treasury-landing .footer-links {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .treasury-landing .footer-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) {
+  .treasury-landing .footer-links {
+    grid-template-columns: 1fr;
+  }
+
+  .treasury-landing .footer-bottom {
+    gap: 7px;
+  }
+}

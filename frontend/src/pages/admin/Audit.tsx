@@ -1,0 +1,3 @@
+import { useApp } from '../../context/AppContext'
+import { PageHeader } from '../../components/Ui'
+export default function AdminAudit() { const { auditLogs } = useApp(); return <><PageHeader title="Audit logs" description="System activity relevant to administration and tender publication."/><div className="card table-card"><div className="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th></tr></thead><tbody>{auditLogs.map(log => <tr key={log.id}><td>{log.time}</td><td>{log.actor}</td><td>{log.action}</td><td>{log.target}</td></tr>)}</tbody></table></div></div></> }
