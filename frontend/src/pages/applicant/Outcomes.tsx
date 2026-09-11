@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { PageHeader, StatusBadge } from '../../components/Ui'
 
@@ -12,6 +13,7 @@ export default function Outcomes() {
       <h3>{application.tenderTitle}</h3>
       <span>{application.tenderReference}</span>
       <p>{application.status === 'SUCCESSFUL' ? 'Your company has been selected as the successful bidder.' : 'Your company was not selected for this tender.'}</p>
+      <Link className="button secondary full" to={`/applicant/applications/${application.id}`}>View application record</Link>
     </div>)}</div> : <div className="empty-state"><h3>No final outcomes yet</h3><p>Once an authorised final decision has been recorded, your result will appear here.</p></div>}
   </>
 }

@@ -7,12 +7,14 @@ const navByRole = {
     ['Tenders', '/admin/tenders'],
     ['Create Tender', '/admin/tenders/create'],
     ['Company Verification', '/admin/companies'],
+    ['Document Assessment', '/admin/documents'],
     ['Audit Logs', '/admin/audit'],
   ],
   APPLICANT: [
     ['Available Tenders', '/applicant/tenders'],
     ['My Applications', '/applicant/applications'],
     ['Outcomes', '/applicant/outcomes'],
+    ['Document Assessment', '/applicant/documents'],
   ],
   BEC: [
     ['Evaluation Register', '/bec'],

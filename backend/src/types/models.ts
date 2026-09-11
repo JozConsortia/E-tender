@@ -46,6 +46,7 @@ export interface Application {
   validDocuments?: string[]
   rejectedDocuments?: string[]
   missingMandatoryDocuments?: string[]
+  insufficientDocuments?: boolean
   aiScore?: number
   aiRecommendation?: string
   aiSummary?: string

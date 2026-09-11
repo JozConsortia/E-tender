@@ -13,7 +13,8 @@ export function syncTenderLifecycle() {
     }
     if (tender.status === 'EVALUATION') {
       const related = applications.filter((item) => item.tenderId === tender.id)
-      if (related.length > 0 && related.every((item) => ['SHORTLISTED', 'REVIEW_REQUIRED'].includes(item.status))) {
+      const evaluated = related.every((item) => ['SHORTLISTED', 'REVIEW_REQUIRED'].includes(item.status))
+      if (related.length > 0 && evaluated && related.some((item) => item.status === 'SHORTLISTED')) {
         tender.status = 'ADJUDICATION'
         log('System', 'Completed BEC evaluation stage', tender.reference)
       }

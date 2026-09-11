@@ -10,6 +10,8 @@ export default function BacAdjudication() {
   const application = applications.find((item) => item.id === id)
   const tender = application ? tenders.find((item) => item.id === application.tenderId) : undefined
   const [note, setNote] = useState('')
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   if (!application || !tender || tender.status !== 'ADJUDICATION' || application.status !== 'SHORTLISTED') {
     return <div className="empty-state"><h3>Adjudication is not available</h3><p>This case must complete BEC evaluation before the BAC can review it.</p><button className="button secondary" onClick={() => navigate('/bac')}>Return to adjudication register</button></div>
@@ -17,11 +19,11 @@ export default function BacAdjudication() {
 
   const submit = async (decision: 'APPROVE' | 'RETURN') => {
     if (note.trim().length < 10) return
-    if (decision === 'APPROVE') {
-      await decideApplication(application.id, 'SHORTLISTED', note)
-    } else {
-      await decideApplication(application.id, 'REVIEW_REQUIRED', note)
-    }
+    setError('')
+    setSaving(true)
+    const result = await decideApplication(application.id, decision === 'APPROVE' ? 'SHORTLISTED' : 'REVIEW_REQUIRED', note)
+    setSaving(false)
+    if (!result.ok) { setError(result.message ?? 'The adjudication decision could not be recorded.'); return }
     navigate('/bac')
   }
 
@@ -38,7 +40,7 @@ export default function BacAdjudication() {
         <div className="file-list static">{application.documents.map((document) => <span key={document}>{document}</span>)}</div>
         <div className="notice info"><strong>Separation of duties</strong><span>The BAC records the adjudication rationale. Final award authority remains with the authorised approver.</span></div>
       </div>
-      <div className="card form-card"><span className="eyebrow">Committee decision</span><label>Adjudication rationale<textarea rows={7} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Explain why the recommendation is supported or returned." required /></label><div className="form-actions"><button className="button secondary" onClick={() => submit('RETURN')} disabled={note.trim().length < 10}>Return to BEC</button><button className="button primary" onClick={() => submit('APPROVE')} disabled={note.trim().length < 10}>Refer to final approval</button></div></div>
+      <div className="card form-card"><span className="eyebrow">Committee decision</span><label>Adjudication rationale<textarea rows={7} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Explain why the recommendation is supported or returned." required /></label>{error && <div className="error-box">{error}</div>}<div className="form-actions"><button className="button secondary" onClick={() => submit('RETURN')} disabled={saving || note.trim().length < 10}>Return to BEC</button><button className="button primary" onClick={() => submit('APPROVE')} disabled={saving || note.trim().length < 10}>Refer to final approval</button></div></div>
     </div>
   </>
 }

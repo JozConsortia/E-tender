@@ -51,6 +51,19 @@ ADMIN PUBLISHES
 
 The AI is advisory. It does not make the final procurement award.
 
+## AI document rules
+
+- A submission with fewer than three documents is rejected by the AI review, scored 0, and never reaches the BEC.
+- A submission missing mandatory evidence is flagged for human review instead of being evaluated.
+- An AI-rejected submission cannot be evaluated by the BEC, and a tender only moves to adjudication once at least one bid is shortlisted.
+
+## Document assessment page
+
+`Document Assessment` (admin and applicant navigation) uploads a single PDF/PNG/JPEG/WEBP file to `POST /api/documents/analyse`.
+
+- With `GEMINI_API_KEY` set in `backend/.env`, the document is read by Gemini (`GEMINI_MODEL`, default `gemini-2.5-flash`).
+- Without a key, the endpoint falls back to filename screening and returns a manual-review recommendation, so the page stays usable offline.
+
 ## Demo accounts
 
 | Role | Email | Password |

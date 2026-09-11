@@ -20,6 +20,8 @@ function requirementMatchesDocument(requirement: Tender['requirements'][number],
   return requirementText.includes(docText) || docText.includes(requirementText)
 }
 
+export const MINIMUM_SUBMITTED_DOCUMENTS = 3
+
 export function validateSubmittedDocuments(documents: string[], tender: Tender) {
   const validDocuments: string[] = []
   const rejectedDocuments: string[] = []
@@ -43,20 +45,24 @@ export function validateSubmittedDocuments(documents: string[], tender: Tender) 
   const validCoverage = matchedRequirementIds.size
   const score = Math.min(100, Math.max(0, Math.round((validCoverage / Math.max(1, requiredCoverage)) * 100)))
 
+  const hasInsufficientDocuments = documents.length < MINIMUM_SUBMITTED_DOCUMENTS
   const hasBlockingMandatoryIssue = missingMandatoryDocuments.length > 0
-  const aiRecommendation = hasBlockingMandatoryIssue ? 'REVIEW REQUIRED' : score >= 70 ? 'QUALIFY' : 'REVIEW REQUIRED'
+  const aiRecommendation = hasInsufficientDocuments ? 'REJECTED' : hasBlockingMandatoryIssue ? 'REVIEW REQUIRED' : score >= 70 ? 'QUALIFY' : 'REVIEW REQUIRED'
 
   return {
     validDocuments,
     rejectedDocuments,
     missingMandatoryDocuments,
-    aiScore: score,
+    insufficientDocuments: hasInsufficientDocuments,
+    aiScore: hasInsufficientDocuments ? 0 : score,
     aiRecommendation,
-    aiSummary: hasBlockingMandatoryIssue
-      ? `AI review accepted ${validDocuments.length} relevant document(s). Missing mandatory evidence: ${missingMandatoryDocuments.join(', ')}. The application has been flagged for human review and should not be passed to BEC as a complete submission.`
-      : validDocuments.length > 0
-        ? `AI review accepted ${validDocuments.length} relevant document(s) for this tender and found the evidence sufficient for committee review.`
-        : 'AI review rejected all submitted documents. No accepted evidence was found for this tender.',
+    aiSummary: hasInsufficientDocuments
+      ? `AI review rejected the submission. Only ${documents.length} document(s) were attached and at least ${MINIMUM_SUBMITTED_DOCUMENTS} are required for a bid to be considered responsive.`
+      : hasBlockingMandatoryIssue
+        ? `AI review accepted ${validDocuments.length} relevant document(s). Missing mandatory evidence: ${missingMandatoryDocuments.join(', ')}. The application has been flagged for human review and should not be passed to BEC as a complete submission.`
+        : validDocuments.length > 0
+          ? `AI review accepted ${validDocuments.length} relevant document(s) for this tender and found the evidence sufficient for committee review.`
+          : 'AI review rejected all submitted documents. No accepted evidence was found for this tender.',
   }
 }
 
@@ -70,5 +76,6 @@ export function analyzeApplication(application: Application, tender: Tender) {
     validDocuments: validation.validDocuments,
     rejectedDocuments: validation.rejectedDocuments,
     missingMandatoryDocuments: validation.missingMandatoryDocuments,
+    insufficientDocuments: validation.insufficientDocuments,
   }
 }

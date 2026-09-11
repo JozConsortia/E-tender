@@ -5,6 +5,7 @@ import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Forbidden from './pages/Forbidden'
+import DocumentValidation from './pages/DocumentValidation'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import Tenders from './pages/admin/Tenders'
 import CreateTender from './pages/admin/CreateTender'
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/admin/tenders/create" element={<CreateTender />} />
           <Route path="/admin/audit" element={<AdminAudit />} />
           <Route path="/admin/companies" element={<CompanyVerification />} />
+          <Route path="/admin/documents" element={<DocumentValidation />} />
         </Route>
 
         <Route element={<ProtectedRoute roles={['APPLICANT']} />}>
@@ -48,6 +50,7 @@ export default function App() {
           <Route path="/applicant/outcomes" element={<Outcomes />} />
           <Route path="/applicant/applications" element={<Applications />} />
           <Route path="/applicant/applications/:id" element={<ApplicationDetails />} />
+          <Route path="/applicant/documents" element={<DocumentValidation />} />
         </Route>
 
         <Route element={<ProtectedRoute roles={['BEC']} />}>

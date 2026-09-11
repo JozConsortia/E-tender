@@ -1,6 +1,14 @@
 import { Link } from 'react-router-dom'
+import { isTenderOpenForApplications, useApp } from '../context/AppContext'
 
 export default function Landing() {
+  const { tenders } = useApp()
+  const openTenders = tenders.filter(isTenderOpenForApplications)
+  const awardedTenders = tenders.filter((tender) => tender.status === 'AWARDED')
+  const recentTenders = [...openTenders, ...awardedTenders].slice(0, 3)
+  const closingSoon = (closingDate: string) =>
+    new Date(closingDate).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000
+
   return (
     <div className="landing treasury-landing">
 
@@ -108,18 +116,18 @@ export default function Landing() {
           <div className="portal-summary">
 
             <div className="summary-item">
-              <span>Active Tenders</span>
-              <strong>24</strong>
+              <span>Published Tenders</span>
+              <strong>{tenders.length}</strong>
             </div>
 
             <div className="summary-item">
               <span>Open Opportunities</span>
-              <strong>12</strong>
+              <strong>{openTenders.length}</strong>
             </div>
 
             <div className="summary-item">
-              <span>Submissions</span>
-              <strong>186</strong>
+              <span>Awarded</span>
+              <strong>{awardedTenders.length}</strong>
             </div>
 
           </div>
@@ -128,24 +136,8 @@ export default function Landing() {
             Recent procurement activity
           </div>
 
-          {[
-            {
-              reference: 'MPG/ICT/2026/018',
-              title: 'ICT Infrastructure Services',
-              status: 'Open',
-            },
-            {
-              reference: 'MPG/CON/2026/011',
-              title: 'Provincial Building Maintenance',
-              status: 'Closing Soon',
-            },
-            {
-              reference: 'MPG/SUP/2026/024',
-              title: 'Office Equipment Supply',
-              status: 'Evaluation',
-            },
-          ].map((tender) => (
-            <div className="tender-preview" key={tender.reference}>
+          {recentTenders.length ? recentTenders.map((tender) => (
+            <div className="tender-preview" key={tender.id}>
 
               <div>
                 <small>{tender.reference}</small>
@@ -153,11 +145,22 @@ export default function Landing() {
               </div>
 
               <span className="tender-status">
-                {tender.status}
+                {tender.status === 'AWARDED'
+                  ? 'Awarded'
+                  : closingSoon(tender.closingDate)
+                    ? 'Closing Soon'
+                    : 'Open'}
               </span>
 
             </div>
-          ))}
+          )) : (
+            <div className="tender-preview">
+              <div>
+                <strong>No tenders are currently advertised</strong>
+                <small>New opportunities appear here as soon as they are published.</small>
+              </div>
+            </div>
+          )}
 
           <div className="portal-footer">
             <span>AI-assisted document assessment</span>
