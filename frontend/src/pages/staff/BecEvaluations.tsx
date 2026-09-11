@@ -19,7 +19,7 @@ export default function BecEvaluations() {
   }
 
   const rejectedByAi = application.aiRecommendation === 'REJECTED'
-  const evaluable = application.status === 'SUBMITTED' && !rejectedByAi
+  const evaluable = ['SUBMITTED', 'UNDER_EVALUATION'].includes(application.status) && !rejectedByAi
 
   const submitEvaluation = async () => {
     setError('')

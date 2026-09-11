@@ -31,7 +31,7 @@ router.post('/', authenticate, authorize('APPLICANT'), (req, res) => {
   const canProceedToBec = !validation.insufficientDocuments && validation.missingMandatoryDocuments.length === 0 && validation.validDocuments.length > 0
 
   const application: typeof applications[number] = {
-    id: `a-${Date.now()}`,
+    id: `a-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     tenderId: tender.id,
     tenderReference: tender.reference,
     tenderTitle: tender.title,

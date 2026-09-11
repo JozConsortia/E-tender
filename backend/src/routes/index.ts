@@ -3,6 +3,7 @@ import authRoutes from './auth.routes.js'
 import tenderRoutes from './tender.routes.js'
 import applicationRoutes from './application.routes.js'
 import staffRoutes from './staff.routes.js'
+import documentRoutes from './documentRoutes.js'
 import { users, tenders, applications, auditLogs } from '../data/store.js'
 import { authenticate } from '../middleware/auth.js'
 import { syncTenderLifecycle } from '../services/workflow.service.js'
@@ -42,6 +43,7 @@ router.get('/bootstrap', authenticate, (req, res) => {
 router.use('/auth', authRoutes)
 router.use('/tenders', tenderRoutes)
 router.use('/applications', applicationRoutes)
+router.use('/documents', documentRoutes)
 router.use('/', staffRoutes)
 
 export default router

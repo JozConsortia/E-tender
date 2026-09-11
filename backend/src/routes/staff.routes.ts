@@ -6,6 +6,8 @@ import { addAudit, syncTenderLifecycle } from '../services/workflow.service.js'
 
 const router = Router()
 
+const BEC_EVALUABLE_STATUSES = ['SUBMITTED', 'UNDER_EVALUATION']
+
 router.get('/users', authenticate, authorize('ADMIN'), (_req, res) => {
   const safe = users.map(({ password: _p, ...user }) => user)
   return res.json(safe)
@@ -33,14 +35,15 @@ router.get('/audit', authenticate, authorize('ADMIN', 'AUDITOR'), (_req, res) =>
 router.get('/bec/evaluations', authenticate, authorize('BEC'), (req, res) => {
   syncTenderLifecycle()
   const activeTenders = new Set(tenders.filter((t) => t.status === 'EVALUATION').map((t) => t.id))
-  return res.json(applications.filter((a) => activeTenders.has(a.tenderId) && a.status === 'SUBMITTED' && (a.missingMandatoryDocuments?.length ?? 0) === 0 && (a.validDocuments?.length ?? a.documents.length) > 0))
+  return res.json(applications.filter((a) => activeTenders.has(a.tenderId) && BEC_EVALUABLE_STATUSES.includes(a.status) && (a.missingMandatoryDocuments?.length ?? 0) === 0 && (a.validDocuments?.length ?? a.documents.length) > 0))
 })
 
 router.post('/bec/evaluations/:id', authenticate, authorize('BEC'), (req, res) => {
   syncTenderLifecycle()
   const application = applications.find((a) => a.id === req.params.id)
   const tender = application ? tenders.find((t) => t.id === application.tenderId) : undefined
-  if (!application || !tender || tender.status !== 'EVALUATION' || application.status !== 'SUBMITTED') return res.status(400).json({ message: 'This application is not available for BEC evaluation.' })
+  if (!application || !tender || tender.status !== 'EVALUATION' || !BEC_EVALUABLE_STATUSES.includes(application.status)) return res.status(400).json({ message: 'This application is not available for BEC evaluation.' })
+  if (application.aiRecommendation === 'REJECTED') return res.status(400).json({ message: 'The AI document review rejected this submission, so it cannot be evaluated.' })
   const score = Math.max(0, Math.min(100, Math.round(Number(req.body?.score))))
   const note = String(req.body?.note ?? '').trim()
   if (!note || note.length < 10) return res.status(400).json({ message: 'A BEC rationale of at least 10 characters is required.' })
@@ -74,7 +77,7 @@ router.post('/bac/cases/:id', authenticate, authorize('BAC'), (req, res) => {
   if (!application || !tender || tender.status !== 'ADJUDICATION' || application.status !== 'SHORTLISTED') return res.status(400).json({ message: 'This case is not available for BAC adjudication.' })
   if (!note || note.length < 10) return res.status(400).json({ message: 'A BAC rationale of at least 10 characters is required.' })
   if (decision === 'APPROVE') { application.bacNote = note; tender.status = 'APPROVAL'; addAudit(req.user!.name, 'Referred recommendation to final approval', tender.reference) }
-  else if (decision === 'RETURN') { application.status = 'REVIEW_REQUIRED'; application.bacNote = note; tender.status = 'EVALUATION'; addAudit(req.user!.name, 'Returned recommendation to BEC', tender.reference) }
+  else if (decision === 'RETURN') { application.status = 'UNDER_EVALUATION'; application.bacNote = note; tender.status = 'EVALUATION'; addAudit(req.user!.name, 'Returned recommendation to BEC', tender.reference) }
   else return res.status(400).json({ message: 'Invalid adjudication decision.' })
   return res.json(application)
 })

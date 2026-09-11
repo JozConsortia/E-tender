@@ -1,8 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 const documentSchema = {
   type: "object",
@@ -70,6 +68,7 @@ export async function analyseDocument(file) {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
 
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const base64Data = file.buffer.toString("base64");
 
   const prompt = `
@@ -100,7 +99,7 @@ IMPORTANT:
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: MODEL,
     contents: [
       {
         inlineData: {
@@ -114,10 +113,7 @@ IMPORTANT:
     ],
     config: {
       responseMimeType: "application/json",
-      responseSchema: documentSchema,
-      thinkingConfig: {
-        thinkingLevel: "low"
-      }
+      responseSchema: documentSchema
     }
   });
 
