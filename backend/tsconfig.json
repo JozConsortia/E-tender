@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    "outDir": "dist",
+    "rootDir": "src",
+    "allowJs": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
@@ -9,5 +12,5 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "src/**/*.js"]
 }

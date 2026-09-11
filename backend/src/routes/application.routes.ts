@@ -28,7 +28,7 @@ router.post('/', authenticate, authorize('APPLICANT'), (req, res) => {
   if (applications.some((item) => item.tenderId === tenderId && item.applicantId === req.user!.id)) return res.status(409).json({ message: 'You have already applied for this tender.' })
 
   const validation = validateSubmittedDocuments(documents.map(String), tender)
-  const canProceedToBec = validation.missingMandatoryDocuments.length === 0 && validation.validDocuments.length > 0
+  const canProceedToBec = !validation.insufficientDocuments && validation.missingMandatoryDocuments.length === 0 && validation.validDocuments.length > 0
 
   const application: typeof applications[number] = {
     id: `a-${Date.now()}`,
@@ -39,6 +39,7 @@ router.post('/', authenticate, authorize('APPLICANT'), (req, res) => {
     applicantId: req.user!.id,
     submittedAt: new Date().toISOString(),
     status: canProceedToBec ? 'SUBMITTED' : 'REVIEW_REQUIRED',
+    insufficientDocuments: validation.insufficientDocuments,
     documents: documents.map(String),
     validDocuments: validation.validDocuments,
     rejectedDocuments: validation.rejectedDocuments,
@@ -51,6 +52,7 @@ router.post('/', authenticate, authorize('APPLICANT'), (req, res) => {
   applications.unshift(application)
   tender.applications += 1
   addAudit(req.user!.name, canProceedToBec ? 'Submitted application for review' : 'Submitted application with AI rejection flags', tender.reference)
+  if (validation.insufficientDocuments) addAudit('AI document review', `Rejected submission with ${documents.length} document(s)`, tender.reference)
   return res.status(201).json(application)
 })
 

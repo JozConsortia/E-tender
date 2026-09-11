@@ -4,6 +4,7 @@ import { isTenderOpenForApplications, isTenderPastClosing, useApp } from '../../
 import { PageHeader } from '../../components/Ui'
 
 const slug = (title: string) => title.trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '')
+const MINIMUM_DOCUMENTS = 3
 
 export default function TenderDetails() {
   const { id } = useParams()
@@ -14,12 +15,14 @@ export default function TenderDetails() {
   const verified = currentUser?.verificationStatus === 'APPROVED'
   const [files, setFiles] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   if (!tender) return <div className="empty-state"><h3>Tender not found</h3><p>The tender may have been removed from the public application list.</p></div>
 
   const open = isTenderOpenForApplications(tender)
   const pastClosing = isTenderPastClosing(tender)
   const canApply = verified && open && !already
+  const attachedCount = Object.keys(files).length
 
   const attach = (requirementId: string, title: string) => setFiles((current) => ({ ...current, [requirementId]: `${slug(title)}.pdf` }))
   const detach = (requirementId: string) => setFiles((current) => { const next = { ...current }; delete next[requirementId]; return next })
@@ -28,9 +31,12 @@ export default function TenderDetails() {
     event.preventDefault()
     const documents = Object.values(files)
     if (!documents.length) { setError('Attach at least one supporting document for AI validation.'); return }
+    setError('')
+    setSubmitting(true)
     const result = await submitApplication(tender.id, currentUser?.organisation ?? '', documents)
+    setSubmitting(false)
     if (!result.ok) { setError(result.message ?? 'Your application could not be submitted.'); return }
-    navigate('/applicant/outcomes')
+    navigate('/applicant/applications')
   }
 
   return <>
@@ -60,11 +66,12 @@ export default function TenderDetails() {
           </div>)}
         </div>
         {error && <div className="error-box">{error}</div>}
-        <div className="notice info"><strong>AI document review</strong><span>The system will validate uploaded evidence, reject unmatched documents, and only send valid requirements to the BEC for review.</span></div>
+        <div className="notice info"><strong>AI document review</strong><span>The system will validate uploaded evidence, reject unmatched documents, and only send valid requirements to the BEC for review. Submissions with fewer than {MINIMUM_DOCUMENTS} documents are rejected automatically.</span></div>
+        {canApply && attachedCount > 0 && attachedCount < MINIMUM_DOCUMENTS && <div className="notice warning"><strong>AI will reject this submission</strong><span>{attachedCount} document(s) attached. Attach at least {MINIMUM_DOCUMENTS} documents to be considered responsive.</span></div>}
         {already ? <div className="success-box">You already submitted this tender. The final outcome will appear in Outcomes.</div>
           : !verified ? <div className="muted">Application access is unavailable until company verification is complete.</div>
           : !open ? <div className="muted">Applications are closed or the tender is no longer accepting submissions.</div>
-          : <button className="button primary full large" type="submit">Submit application</button>}
+          : <button className="button primary full large" type="submit" disabled={submitting}>{submitting ? 'Submitting…' : 'Submit application'}</button>}
       </form>
     </div>
   </>

@@ -77,6 +77,10 @@ export interface Application {
   submittedAt: string
   status: ApplicationStatus
   documents: string[]
+  validDocuments?: string[]
+  rejectedDocuments?: string[]
+  missingMandatoryDocuments?: string[]
+  insufficientDocuments?: boolean
   aiScore?: number
   aiRecommendation?: string
   aiSummary?: string

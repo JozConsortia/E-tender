@@ -51,6 +51,11 @@ ADMIN PUBLISHES
 
 The AI is advisory. It does not make the final procurement award.
 
+## AI document rules
+
+- A submission with fewer than three documents is rejected by the AI review, scored 0, and never reaches the BEC.
+- A submission missing mandatory evidence is flagged for human review instead of being evaluated.
+
 ## Demo accounts
 
 | Role | Email | Password |
