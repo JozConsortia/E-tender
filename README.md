@@ -126,7 +126,23 @@ npm install
 npm run dev                # http://localhost:5173
 ```
 
-Useful backend scripts: `npm run db:studio` (visual database browser), `npm run db:generate` (regenerate the Prisma client after a schema edit), `npm run db:pull` (re-sync the schema file from the live database), `npm run build` + `npm start` (production build).
+Useful backend scripts: `npm run db:studio` (visual database browser), `npm run db:generate` (regenerate the Prisma client after a schema edit), `npm run db:pull` (re-sync the schema file from the live database), `npm run db:seed-demo` (adds 6 additional demo tenders — see below), `npm run build` + `npm start` (production build).
+
+## Demo dataset
+
+The seed data spans **12 tenders across every lifecycle stage** so every role's dashboard has something to show:
+
+| Stage | Count | Example |
+|---|---|---|
+| DRAFT | 1 | `MPG/AGR/2026/007` — publish it live to demo the Admin workflow |
+| PUBLISHED (open for bids) | 3 | `MPG/ICT/2026/001`, `MPG/DEDT/2026/002`, `MPG/CORP/2026/004` |
+| EVALUATION | 2 | `MPG/PWRT/2026/003`, `MPG/HLTH/2026/008` — each has a bid ready for BEC to score |
+| ADJUDICATION | 2 | `MPG/TREAS/2026/005`, `MPG/RDS/2026/009` — each has a shortlisted bid ready for BAC |
+| APPROVAL | 1 | `MPG/SAFE/2026/010` — a shortlisted bid ready for the Approver's final decision |
+| AWARDED | 2 | `MPG/EDU/2026/006`, `MPG/SPORT/2026/011` — each with a winning and a losing bid |
+| CANCELLED | 1 | `MPG/TOUR/2026/012` — an award declined at final approval |
+
+The first 6 (`t-001`–`t-006`) come from the base database; the other 6 are added by `backend/scripts/seed-more-tenders.ts` (run automatically once via `npm run db:seed-demo` — safe to re-run, it skips if they already exist).
 
 ## Login credentials for testing
 

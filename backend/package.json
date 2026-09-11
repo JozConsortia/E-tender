@@ -10,7 +10,8 @@
     "build": "tsc",
     "db:generate": "prisma generate",
     "db:pull": "prisma db pull",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed-demo": "tsx scripts/seed-more-tenders.ts"
   },
   "dependencies": {
     "@google/genai": "^2.22.0",
