@@ -46,7 +46,7 @@ export function validateSubmittedDocuments(documents: string[], tender: Requirem
   const score = Math.min(100, Math.max(0, Math.round((validCoverage / Math.max(1, requiredCoverage)) * 100)))
 
   const hasBlockingMandatoryIssue = missingMandatoryDocuments.length > 0
-  const aiRecommendation = hasBlockingMandatoryIssue ? 'REVIEW REQUIRED' : score >= 70 ? 'QUALIFY' : 'REVIEW REQUIRED'
+  const aiRecommendation = hasBlockingMandatoryIssue ? 'REJECTED' : score >= 70 ? 'QUALIFY' : 'REVIEW REQUIRED'
 
   return {
     validDocuments,
@@ -55,7 +55,7 @@ export function validateSubmittedDocuments(documents: string[], tender: Requirem
     aiScore: score,
     aiRecommendation,
     aiSummary: hasBlockingMandatoryIssue
-      ? `AI review accepted ${validDocuments.length} relevant document(s). Missing mandatory evidence: ${missingMandatoryDocuments.join(', ')}. The application has been flagged for human review and should not be passed to BEC as a complete submission.`
+      ? `AI review accepted ${validDocuments.length} relevant document(s) but rejected this application: missing mandatory evidence — ${missingMandatoryDocuments.join(', ')}. The application does not qualify for committee evaluation and has been marked unsuccessful.`
       : validDocuments.length > 0
         ? `AI review accepted ${validDocuments.length} relevant document(s) for this tender and found the evidence sufficient for committee review.`
         : 'AI review rejected all submitted documents. No accepted evidence was found for this tender.',

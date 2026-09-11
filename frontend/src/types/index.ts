@@ -82,6 +82,7 @@ export interface Application {
   pricingAmount?: number
   complianceDeclaration?: boolean
   documents: string[]
+  missingMandatoryDocuments?: string[]
   aiScore?: number
   aiRecommendation?: string
   aiSummary?: string

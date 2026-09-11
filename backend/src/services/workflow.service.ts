@@ -21,7 +21,7 @@ export async function syncTenderLifecycle() {
 
   const evaluationTenders = await prisma.tender.findMany({ where: { status: 'EVALUATION' }, include: { applications: { select: { status: true } } } })
   for (const tender of evaluationTenders) {
-    if (tender.applications.length > 0 && tender.applications.every((application) => ['SHORTLISTED', 'REVIEW_REQUIRED'].includes(application.status))) {
+    if (tender.applications.length > 0 && tender.applications.every((application) => ['SHORTLISTED', 'REVIEW_REQUIRED', 'SUCCESSFUL', 'UNSUCCESSFUL'].includes(application.status))) {
       await prisma.tender.update({ where: { id: tender.id }, data: { status: 'ADJUDICATION' } })
       await addAudit('System', 'Completed BEC evaluation stage', tender.reference)
     }

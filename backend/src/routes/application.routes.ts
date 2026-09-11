@@ -80,7 +80,7 @@ router.post('/', authenticate, authorize('APPLICANT'), async (req, res) => {
       tenderTitle: tender.title,
       applicantId: req.user!.id,
       companyName: organisation,
-      status: canProceedToBec ? 'SUBMITTED' : 'REVIEW_REQUIRED',
+      status: canProceedToBec ? 'SUBMITTED' : 'UNSUCCESSFUL',
       bidSummary: String(bidSummary).trim(),
       technicalApproach: String(technicalApproach).trim(),
       deliveryTimeline: String(deliveryTimeline).trim(),
@@ -93,10 +93,11 @@ router.post('/', authenticate, authorize('APPLICANT'), async (req, res) => {
       aiScore: validation.aiScore,
       aiRecommendation: validation.aiRecommendation,
       aiSummary: validation.aiSummary,
+      approvalNote: canProceedToBec ? null : `Automatically rejected by AI document screening: missing mandatory evidence — ${validation.missingMandatoryDocuments.join(', ')}.`,
       updatedAt: new Date(),
     },
   })
-  await addAudit(req.user!.name, canProceedToBec ? 'Submitted application for review' : 'Submitted application with AI rejection flags', tender.reference)
+  await addAudit(req.user!.name, canProceedToBec ? 'Submitted application for review' : 'Application automatically rejected by AI document screening', tender.reference)
   return res.status(201).json(toApplicationDTO(application))
 })
 

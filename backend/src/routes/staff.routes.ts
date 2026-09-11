@@ -66,7 +66,7 @@ router.get('/audit', authenticate, authorize('ADMIN', 'AUDITOR'), async (_req, r
 
 router.get('/bec/evaluations', authenticate, authorize('BEC'), async (_req, res) => {
   await syncTenderLifecycle()
-  const applications = await prisma.application.findMany({ where: { status: 'UNDER_EVALUATION', tender: { status: 'EVALUATION' } } })
+  const applications = await prisma.application.findMany({ where: { status: { in: ['UNDER_EVALUATION', 'REVIEW_REQUIRED'] }, tender: { status: 'EVALUATION' } } })
   const filtered = applications.filter((application) => {
     const missing = parseJsonArray(application.missingMandatoryDocuments)?.length ?? 0
     const valid = parseJsonArray(application.validDocuments)?.length ?? parseJsonArray(application.documents)?.length ?? 0
@@ -78,7 +78,7 @@ router.get('/bec/evaluations', authenticate, authorize('BEC'), async (_req, res)
 router.post('/bec/evaluations/:id', authenticate, authorize('BEC'), async (req, res) => {
   await syncTenderLifecycle()
   const application = await prisma.application.findUnique({ where: { id: String(req.params.id) }, include: { tender: { include: { requirements: true } } } })
-  if (!application || application.tender.status !== 'EVALUATION' || application.status !== 'UNDER_EVALUATION') return res.status(400).json({ message: 'This application is not available for BEC evaluation.' })
+  if (!application || application.tender.status !== 'EVALUATION' || !['UNDER_EVALUATION', 'REVIEW_REQUIRED'].includes(application.status)) return res.status(400).json({ message: 'This application is not available for BEC evaluation.' })
 
   const score = Math.max(0, Math.min(100, Math.round(Number(req.body?.score))))
   const note = String(req.body?.note ?? '').trim()
