@@ -1,4 +1,4 @@
-import type { Application, AuditLog, Tender, TenderRequirement, EvaluationCriterion, User } from '@prisma/client'
+import type { Application, AuditLog, SecurityAlert, Tender, TenderRequirement, EvaluationCriterion, User } from '@prisma/client'
 import type { ApplicationStatus, TenderStatus } from '../types/models.js'
 
 export function parseJsonArray(value: string | null | undefined): string[] | undefined {
@@ -87,5 +87,20 @@ export function toAuditDTO(entry: AuditLog) {
     actor: entry.actor,
     action: entry.action,
     target: entry.target,
+  }
+}
+
+export function toAlertDTO(alert: SecurityAlert) {
+  return {
+    id: alert.id,
+    type: alert.type,
+    severity: alert.severity,
+    message: alert.message,
+    targetType: alert.targetType ?? undefined,
+    targetId: alert.targetId ?? undefined,
+    resolved: alert.resolved,
+    resolvedBy: alert.resolvedBy ?? undefined,
+    resolvedAt: alert.resolvedAt?.toISOString(),
+    createdAt: alert.createdAt.toISOString(),
   }
 }

@@ -101,3 +101,18 @@ export interface AuditEntry {
   action: string
   target: string
 }
+
+export type AlertSeverity = 'LOW' | 'MEDIUM' | 'HIGH'
+
+export interface SecurityAlert {
+  id: string
+  type: string
+  severity: AlertSeverity
+  message: string
+  targetType?: string
+  targetId?: string
+  resolved: boolean
+  resolvedBy?: string
+  resolvedAt?: string
+  createdAt: string
+}

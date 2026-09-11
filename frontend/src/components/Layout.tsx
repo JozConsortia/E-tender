@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { roleLabel, useApp } from '../context/AppContext'
+import { NotificationBell } from './NotificationBell'
 
 const navByRole = {
   ADMIN: [
@@ -8,6 +9,7 @@ const navByRole = {
     ['Create Tender', '/admin/tenders/create'],
     ['Company Verification', '/admin/companies'],
     ['Document Assessment', '/admin/documents'],
+    ['Security Alerts', '/admin/alerts'],
     ['Audit Logs', '/admin/audit'],
   ],
   APPLICANT: [
@@ -58,7 +60,7 @@ export function Layout() {
       <main className="main-content">
         <header className="topbar">
           <div><span className="eyebrow">Electronic tendering platform</span><h1>{roleLabel(currentUser.role)}</h1></div>
-          <div className="topbar-meta"><span className="secure-badge">● Strict role workspace</span></div>
+          <div className="topbar-meta">{currentUser.role === 'ADMIN' && <NotificationBell />}<span className="secure-badge">● Strict role workspace</span></div>
         </header>
         <div className="page-content"><Outlet /></div>
       </main>

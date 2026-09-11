@@ -4,6 +4,7 @@ import { prisma } from '../prisma.js'
 import { authenticate, authorize } from '../middleware/auth.js'
 import { validateSubmittedDocuments } from '../services/ai.service.js'
 import { addAudit, syncTenderLifecycle } from '../services/workflow.service.js'
+import { raiseAlert } from '../services/alert.service.js'
 import { parseJsonArray, toApplicationDTO } from '../lib/serialize.js'
 
 const router = Router()
@@ -28,7 +29,16 @@ router.post('/', authenticate, authorize('APPLICANT'), async (req, res) => {
 
   const directors = parseJsonArray(req.user!.directors) ?? []
   const staff = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'BEC', 'BAC', 'APPROVER', 'AUDITOR'] } } })
-  if (directors.some((d) => staff.some((s) => s.name.toLowerCase() === d.toLowerCase()))) return res.status(403).json({ message: 'This company cannot apply because a staff member is registered as its director.' })
+  if (directors.some((d) => staff.some((s) => s.name.toLowerCase() === d.toLowerCase()))) {
+    await raiseAlert({
+      type: 'DIRECTOR_CONFLICT',
+      severity: 'HIGH',
+      message: `"${organisation}" attempted to apply for ${tender.reference} while a declared director matches an internal staff account.`,
+      targetType: 'user',
+      targetId: req.user!.id,
+    })
+    return res.status(403).json({ message: 'This company cannot apply because a staff member is registered as its director.' })
+  }
 
   if (!Array.isArray(documents) || !documents.length || !documents.every((d: unknown) => typeof d === 'string' && validDoc(d))) return res.status(400).json({ message: 'Attach valid supporting documents (PDF, JPG or PNG).' })
 
@@ -41,6 +51,23 @@ router.post('/', authenticate, authorize('APPLICANT'), async (req, res) => {
 
   const existing = await prisma.application.findFirst({ where: { tenderId: tender.id, applicantId: req.user!.id } })
   if (existing) return res.status(409).json({ message: 'You have already applied for this tender.' })
+
+  const submittedNames = documents.map(String)
+  const otherApplications = await prisma.application.findMany({ where: { applicantId: { not: req.user!.id } }, select: { documents: true, companyName: true } })
+  for (const other of otherApplications) {
+    const otherNames = new Set(parseJsonArray(other.documents) ?? [])
+    const overlap = submittedNames.filter((name) => otherNames.has(name))
+    if (overlap.length) {
+      await raiseAlert({
+        type: 'DUPLICATE_DOCUMENTS',
+        severity: 'MEDIUM',
+        message: `"${organisation}" submitted document(s) identical in filename to a submission from "${other.companyName}": ${overlap.join(', ')}. Evidence should be checked for reuse or fabrication.`,
+        targetType: 'user',
+        targetId: req.user!.id,
+      })
+      break
+    }
+  }
 
   const validation = validateSubmittedDocuments(documents.map(String), tender)
   const canProceedToBec = validation.missingMandatoryDocuments.length === 0 && validation.validDocuments.length > 0

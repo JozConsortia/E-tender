@@ -4,10 +4,11 @@ import tenderRoutes from './tender.routes.js'
 import applicationRoutes from './application.routes.js'
 import staffRoutes from './staff.routes.js'
 import documentRoutes from './documentRoutes.js'
+import alertRoutes from './alert.routes.js'
 import { prisma } from '../prisma.js'
 import { authenticate, authorize } from '../middleware/auth.js'
 import { syncTenderLifecycle } from '../services/workflow.service.js'
-import { toApplicationDTO, toAuditDTO, toSafeUser, toTenderDTO } from '../lib/serialize.js'
+import { toAlertDTO, toApplicationDTO, toAuditDTO, toSafeUser, toTenderDTO } from '../lib/serialize.js'
 
 const router = Router()
 
@@ -55,6 +56,10 @@ router.get('/bootstrap', authenticate, async (req, res) => {
     prisma.application.findMany({ include: applicationInclude }),
     prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' } }),
   ])
+  if (role === 'ADMIN') {
+    const alerts = await prisma.securityAlert.findMany({ where: { resolved: false }, orderBy: { createdAt: 'desc' } })
+    return res.json({ users: users.map(toSafeUser), tenders: tenders.map(toTenderDTO), applications: applications.map(toApplicationDTO), auditLogs: auditLogs.map(toAuditDTO), alerts: alerts.map(toAlertDTO) })
+  }
   return res.json({ users: users.map(toSafeUser), tenders: tenders.map(toTenderDTO), applications: applications.map(toApplicationDTO), auditLogs: auditLogs.map(toAuditDTO) })
 })
 
@@ -63,5 +68,6 @@ router.use('/tenders', tenderRoutes)
 router.use('/applications', applicationRoutes)
 router.use('/', staffRoutes)
 router.use('/documents', authenticate, authorize('ADMIN'), documentRoutes)
+router.use('/alerts', alertRoutes)
 
 export default router

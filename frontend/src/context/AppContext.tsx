@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { apiFetch, TOKEN_KEY } from '../api'
 import { demoApplications, demoAuditLogs, demoTenders, demoUsers } from '../data/demo'
-import type { Application, AuditEntry, DemoUser, Role, Tender, TenderRequirement, EvaluationCriterion, VerificationStatus } from '../types'
+import type { Application, AuditEntry, DemoUser, Role, SecurityAlert, Tender, TenderRequirement, EvaluationCriterion, VerificationStatus } from '../types'
 
 type Result = { ok: boolean; message?: string; user?: DemoUser }
 interface AppContextValue {
@@ -10,10 +10,12 @@ interface AppContextValue {
   tenders: Tender[]
   applications: Application[]
   auditLogs: AuditEntry[]
+  alerts: SecurityAlert[]
   ready: boolean
   login: (email: string, password: string) => Promise<Result>
   registerApplicant: (input: { name: string; email: string; password: string; organisation: string; director: string; documents: string[] }) => Promise<Result>
   verifyApplicant: (userId: string, status: VerificationStatus, note?: string) => Promise<Result>
+  renameCompany: (userId: string, organisation: string) => Promise<Result>
   logout: () => void
   createTender: (input: Pick<Tender, 'title' | 'department' | 'description' | 'closingDate'> & { requirements: TenderRequirement[]; criteria: EvaluationCriterion[] }) => Promise<Result>
   publishTender: (id: string) => Promise<Result>
@@ -21,6 +23,7 @@ interface AppContextValue {
   submitApplication: (input: { tenderId: string; companyName: string; documents: string[]; bidSummary: string; technicalApproach: string; deliveryTimeline: string; pricingAmount: number; complianceDeclaration: boolean }) => Promise<Result>
   evaluateApplication: (applicationId: string, score: number, note: string) => Promise<Result>
   decideApplication: (applicationId: string, status: Application['status'], note?: string) => Promise<Result>
+  resolveAlert: (alertId: string) => Promise<Result>
   resetDemo: () => void
 }
 
@@ -38,12 +41,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [tenders, setTenders] = useState<Tender[]>(demoTenders)
   const [applications, setApplications] = useState<Application[]>(demoApplications)
   const [auditLogs, setAuditLogs] = useState<AuditEntry[]>(demoAuditLogs)
+  const [alerts, setAlerts] = useState<SecurityAlert[]>([])
   const [currentUser, setCurrentUser] = useState<DemoUser | null>(null)
   const [ready, setReady] = useState(false)
 
   const refresh = async () => {
-    const state = await apiFetch<{ users: DemoUser[]; tenders: Tender[]; applications: Application[]; auditLogs: AuditEntry[] }>('/bootstrap')
-    setUsers(state.users); setTenders(state.tenders); setApplications(state.applications); setAuditLogs(state.auditLogs)
+    const state = await apiFetch<{ users: DemoUser[]; tenders: Tender[]; applications: Application[]; auditLogs: AuditEntry[]; alerts?: SecurityAlert[] }>('/bootstrap')
+    setUsers(state.users); setTenders(state.tenders); setApplications(state.applications); setAuditLogs(state.auditLogs); setAlerts(state.alerts ?? [])
   }
 
   useEffect(() => {
@@ -55,8 +59,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     apiFetch<{ user: DemoUser }>('/auth/me')
       .then(async (data) => {
         setCurrentUser(data.user)
-        const state = await apiFetch<{ users: DemoUser[]; tenders: Tender[]; applications: Application[]; auditLogs: AuditEntry[] }>('/bootstrap')
-        setUsers(state.users); setTenders(state.tenders); setApplications(state.applications); setAuditLogs(state.auditLogs)
+        const state = await apiFetch<{ users: DemoUser[]; tenders: Tender[]; applications: Application[]; auditLogs: AuditEntry[]; alerts?: SecurityAlert[] }>('/bootstrap')
+        setUsers(state.users); setTenders(state.tenders); setApplications(state.applications); setAuditLogs(state.auditLogs); setAlerts(state.alerts ?? [])
       })
       .catch(() => localStorage.removeItem(TOKEN_KEY))
       .finally(() => setReady(true))
@@ -83,6 +87,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const verifyApplicant = async (userId: string, status: VerificationStatus, note = ''): Promise<Result> => {
     try { await apiFetch(`/users/${userId}/verification`, { method: 'POST', body: JSON.stringify({ status, note }) }); await refresh(); return { ok: true } }
     catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'Verification failed.' } }
+  }
+
+  const renameCompany = async (userId: string, organisation: string): Promise<Result> => {
+    try { await apiFetch(`/users/${userId}/organisation`, { method: 'PATCH', body: JSON.stringify({ organisation }) }); await refresh(); return { ok: true } }
+    catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'The company name could not be updated.' } }
   }
 
   const createTender = async (input: Parameters<AppContextValue['createTender']>[0]): Promise<Result> => {
@@ -132,8 +141,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'Decision could not be recorded.' } }
   }
 
+  const resolveAlert = async (alertId: string): Promise<Result> => {
+    try { await apiFetch(`/alerts/${alertId}/resolve`, { method: 'POST' }); await refresh(); return { ok: true } }
+    catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'The alert could not be resolved.' } }
+  }
+
   const resetDemo = () => window.location.reload()
-  const value = useMemo<AppContextValue>(() => ({ currentUser, users, tenders, applications, auditLogs, ready, login, registerApplicant, verifyApplicant, logout, createTender, publishTender, advanceTenderStage, submitApplication, evaluateApplication, decideApplication, resetDemo }), [currentUser, users, tenders, applications, auditLogs, ready])
+  const value = useMemo<AppContextValue>(() => ({ currentUser, users, tenders, applications, auditLogs, alerts, ready, login, registerApplicant, verifyApplicant, renameCompany, logout, createTender, publishTender, advanceTenderStage, submitApplication, evaluateApplication, decideApplication, resolveAlert, resetDemo }), [currentUser, users, tenders, applications, auditLogs, alerts, ready])
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }
 

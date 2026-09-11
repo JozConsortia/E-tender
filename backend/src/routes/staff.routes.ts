@@ -3,7 +3,8 @@ import { prisma } from '../prisma.js'
 import { authenticate, authorize } from '../middleware/auth.js'
 import { analyzeApplication } from '../services/ai.service.js'
 import { addAudit, syncTenderLifecycle } from '../services/workflow.service.js'
-import { parseJsonArray, toApplicationDTO, toAuditDTO, toSafeUser } from '../lib/serialize.js'
+import { raiseAlert } from '../services/alert.service.js'
+import { parseJsonArray, toApplicationDTO, toAlertDTO, toAuditDTO, toSafeUser } from '../lib/serialize.js'
 
 const router = Router()
 
@@ -22,10 +23,39 @@ router.post('/users/:id/verification', authenticate, authorize('ADMIN'), async (
     const directors = parseJsonArray(user.directors) ?? []
     const staff = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'BEC', 'BAC', 'APPROVER', 'AUDITOR'] } } })
     const conflict = directors.some((d) => staff.some((s) => s.name.toLowerCase() === d.toLowerCase()))
-    if (conflict) return res.status(400).json({ message: 'A staff director conflict prevents approval.' })
+    if (conflict) {
+      await raiseAlert({
+        type: 'DIRECTOR_CONFLICT',
+        severity: 'HIGH',
+        message: `An attempt was made to approve verification for "${user.organisation ?? user.email}" despite a declared director matching an internal staff account.`,
+        targetType: 'user',
+        targetId: user.id,
+      })
+      return res.status(400).json({ message: 'A staff director conflict prevents approval.' })
+    }
   }
   const updated = await prisma.user.update({ where: { id: user.id }, data: { verificationStatus: status, verificationNote: note } })
   await addAudit(req.user!.name, `${status === 'APPROVED' ? 'Approved' : 'Rejected'} company verification`, updated.organisation ?? updated.email)
+  return res.json(toSafeUser(updated))
+})
+
+router.patch('/users/:id/organisation', authenticate, authorize('ADMIN'), async (req, res) => {
+  const user = await prisma.user.findFirst({ where: { id: String(req.params.id), role: 'APPLICANT' } })
+  if (!user) return res.status(404).json({ message: 'Applicant not found.' })
+  const nextName = String(req.body?.organisation ?? '').trim()
+  if (!nextName) return res.status(400).json({ message: 'Provide a company name.' })
+  const previousName = user.organisation ?? ''
+  if (nextName === previousName) return res.json(toSafeUser(user))
+
+  const updated = await prisma.user.update({ where: { id: user.id }, data: { organisation: nextName } })
+  await addAudit(req.user!.name, 'Updated company name', `${previousName || user.email} → ${nextName}`)
+  await raiseAlert({
+    type: 'COMPANY_RENAMED',
+    severity: 'MEDIUM',
+    message: `Company record for ${user.email} was renamed from "${previousName || '(none)'}" to "${nextName}" by ${req.user!.name}.`,
+    targetType: 'user',
+    targetId: user.id,
+  })
   return res.json(toSafeUser(updated))
 })
 
@@ -129,6 +159,28 @@ router.post('/approval/:id', authenticate, authorize('APPROVER'), async (req, re
     updated = await prisma.application.update({ where: { id: application.id }, data: { status: 'SUCCESSFUL', approvalNote: note } })
     await prisma.tender.update({ where: { id: application.tenderId }, data: { status: 'AWARDED' } })
     await addAudit(req.user!.name, 'Approved final award', application.tender.reference)
+
+    const priorAwards = await prisma.application.count({ where: { applicantId: application.applicantId, status: 'SUCCESSFUL', NOT: { id: application.id } } })
+    if (priorAwards >= 2) {
+      await raiseAlert({
+        type: 'AWARD_CONCENTRATION',
+        severity: 'MEDIUM',
+        message: `"${application.companyName}" has now been awarded ${priorAwards + 1} tenders. Review for unusual award concentration.`,
+        targetType: 'user',
+        targetId: application.applicantId,
+      })
+    }
+
+    const priorConflict = await prisma.securityAlert.findFirst({ where: { type: 'DIRECTOR_CONFLICT', targetType: 'user', targetId: application.applicantId } })
+    if (priorConflict) {
+      await raiseAlert({
+        type: 'AWARDED_DESPITE_CONFLICT',
+        severity: 'HIGH',
+        message: `"${application.companyName}" was awarded ${application.tender.reference} after a prior director-conflict flag was recorded against this account. Review before proceeding.`,
+        targetType: 'user',
+        targetId: application.applicantId,
+      })
+    }
   } else if (decision === 'RETURN') {
     updated = await prisma.application.update({ where: { id: application.id }, data: { approvalNote: note } })
     await prisma.tender.update({ where: { id: application.tenderId }, data: { status: 'ADJUDICATION' } })
