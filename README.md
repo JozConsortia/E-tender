@@ -1,105 +1,136 @@
-# AI e-Tendering System — Frontend + Backend Demo
+# TenderLens — AI-Assisted Electronic Tendering Platform
 
-This project contains the React + TypeScript + Vite frontend and a Node.js + Express + TypeScript backend. No database is included yet; the backend uses in-memory demo data and is the source of truth while it is running.
+An electronic tendering (e-procurement) platform built for the Mpumalanga Provincial Treasury use case: administrators publish tenders, suppliers submit bids through a structured form, and a strict role-separated workflow (BEC → BAC → Final Approver) evaluates, adjudicates and awards them — with AI-assisted document screening and automated fraud/misuse detection along the way.
 
 ## Architecture
 
 ```text
-React + Vite + TypeScript (frontend :5173)
+React 18 + TypeScript + Vite (frontend)
         |
-        | REST / JSON + JWT
+        | REST / JSON, JWT bearer auth
         v
-Node.js + Express + TypeScript (backend :5000)
+Node.js + Express 5 + TypeScript (backend)
         |
-        +-- Authentication / RBAC
-        +-- Tender lifecycle
-        +-- Applicant submissions
-        +-- BEC evaluation
-        +-- BAC adjudication
-        +-- Final approval
-        +-- Audit logs
-        +-- AI-assisted demo analysis
-        +-- In-memory store (no database yet)
+        +-- Auth & RBAC (JWT, bcrypt password hashing, account lockout)
+        +-- Tender lifecycle (draft -> publish -> evaluation -> adjudication -> approval -> award)
+        +-- Applicant bid submissions (structured form + document evidence)
+        +-- AI document screening (keyword-matching heuristic, runs on every submission)
+        +-- AI Document Assessment (Google Gemini, admin tool, optional/separate from the above)
+        +-- BEC evaluation / BAC adjudication / Final approval
+        +-- Audit log (every state-changing action)
+        +-- Security alerts (fraud & misuse detection) + optional email delivery
+        |
+        v
+Prisma ORM
+        |
+        v
+MySQL (persistent storage)
 ```
 
-## Strict role separation
+## Roles and strict separation
 
-- Applicant: published tenders, own applications, own outcomes only.
-- Administrator: tender requirements, tender creation/publication, supplier verification, admin audit.
-- BEC: evaluation register, bid evidence, AI-assisted analysis, BEC recommendation.
-- BAC: adjudication register and BAC recommendation.
-- Final Approver: final approval / return / decline.
-- Auditor: read-only oversight and audit trail.
+| Role | Can do |
+|---|---|
+| **Administrator** | Create/publish tenders, verify supplier companies, correct company names, view all tenders/audit, review Security Alerts, use the AI Document Assessment tool |
+| **Applicant / Bidder** | Browse published tenders, submit one bid per tender (structured form + documents), view own applications and outcomes only |
+| **BEC** (Bid Evaluation Committee) | Score bids for tenders currently in evaluation, record a rationale, view the AI screening result |
+| **BAC** (Bid Adjudication Committee) | Review BEC-shortlisted bids, approve for final approval or return to BEC |
+| **Approver** | Approve, decline, or return award recommendations — the only role that finalises an award |
+| **Auditor** | Read-only visibility across all tenders, applications and the full audit trail |
 
-Staff roles cannot submit tenders as applicants, and the supplier registration/apply flow checks declared company directors against staff accounts in the demo.
+A user only ever sees the workspace for their own role (enforced both by frontend routing and backend authorization on every endpoint). Staff accounts (ADMIN/BEC/BAC/APPROVER/AUDITOR) are barred from being declared directors of an applying company — this is checked at registration, at bid submission, and at company-verification approval, and any attempted breach raises a Security Alert.
 
-## Workflow
+## Tender & application lifecycle
 
 ```text
-ADMIN PUBLISHES
-      -> APPLICANT SUBMITS
-      -> CLOSING TIME
-      -> SYSTEM MOVES TO EVALUATION
-      -> AI-ASSISTED DOCUMENT ANALYSIS
-      -> BEC EVALUATION
-      -> BEC RECOMMENDATION
-      -> BAC ADJUDICATION
-      -> FINAL APPROVAL
-      -> AWARD / NO AWARD
-      -> APPLICANT VIEWS OUTCOME
+DRAFT --(admin publishes)--> PUBLISHED --(closing date passes, or admin advances)--> EVALUATION
+  --(all bids scored)--> ADJUDICATION --(BAC approves)--> APPROVAL --(Approver approves)--> AWARDED
+
+Application: SUBMITTED -> UNDER_EVALUATION -> SHORTLISTED -> SUCCESSFUL / UNSUCCESSFUL
+                                            \-> REVIEW_REQUIRED (AI flagged missing/invalid evidence, or BAC returned it)
 ```
 
-The AI is advisory. It does not make the final procurement award.
+The tender and its applications advance together — a tender only reaches ADJUDICATION once every one of its applications has been scored by the BEC, and only reaches AWARDED once the Approver signs off. `POST /api/tenders/:id/advance` lets an admin force the next transition in a demo/testing context without waiting for a real closing date.
 
-## Demo accounts
+## Applicant bid form
 
-| Role | Email | Password |
-|---|---|---|
-| Administrator | admin@etender.org | Admin123! |
-| Applicant | applicant@etender.org | Applicant123! |
-| Applicant (walkthrough) | applicant.walkthrough@etender.org | Walkthrough123! |
-| Pending applicant | supplier.pending@etender.org | Supplier123! |
-| BEC | bec@etender.org | BEC123! |
-| BAC | bac@etender.org | BAC123! |
-| Final Approver | approver@etender.org | Approve123! |
-| Auditor | auditor@etender.org | Audit123! |
+Submitting a bid requires:
+- **Bid summary** and **technical approach** (free text, min. 20 characters each)
+- **Delivery timeline** and **total price**
+- **Compliance declaration** (checkbox — bidder confirms compliance with tender terms)
+- One attached document per published requirement (PDF/JPG/PNG)
 
-## Run backend
+On submission, a lightweight keyword-matching AI check compares attached document filenames against the tender's published requirements, rejects unmatched documents, and flags the application for manual review if any mandatory requirement is missing evidence. BEC, BAC and the Approver can each open a print-friendly **bid report** (`/applications/:id/report`) showing the full form, documents, and AI/committee notes — "Print / Save as PDF" uses the browser's native print dialog.
+
+## AI Document Assessment (admin tool)
+
+A separate, optional tool (Admin → Document Assessment) lets an admin upload any single document (PDF/PNG/JPEG/WEBP) and have Google Gemini extract its type, company name, reference number, issue/expiry dates, and flag missing information or expiry status. This is independent of the per-bid document screening above and requires a valid `GEMINI_API_KEY`.
+
+## Fraud & misuse detection (Security Alerts)
+
+The backend raises a `SecurityAlert` (visible to admins under **Security Alerts**, with an unread-count bell in the topbar) whenever it detects:
+
+| Trigger | Severity |
+|---|---|
+| 5 consecutive failed sign-ins on one account (also locks the account for 15 minutes) | HIGH |
+| A declared company director matches an internal staff account — at registration, bid submission, or verification approval | HIGH |
+| A submitted document's filename is identical to one used by a *different* company | MEDIUM |
+| A company receives its 3rd (or later) award | MEDIUM |
+| A company is awarded despite a prior unresolved director-conflict flag against it | HIGH |
+| A company's registered name is changed by an admin | MEDIUM |
+
+Alerts are always recorded in-app. If `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/`ALERT_EMAIL_TO` are set in `backend/.env`, each alert is also emailed; otherwise the backend logs a one-time console warning and continues in-app-only.
+
+## Tech stack
+
+- **Frontend**: React 18, TypeScript, Vite, React Router
+- **Backend**: Node.js, Express 5, TypeScript (run via `tsx`)
+- **Database**: MySQL, accessed through Prisma ORM (driver adapter, no native engine binary)
+- **Auth**: JWT (`jsonwebtoken`), password hashing via `bcryptjs`
+- **AI**: `@google/genai` (Gemini) for document assessment; a self-contained keyword-matching heuristic for per-bid document screening (no external call)
+- **Email**: `nodemailer` (SMTP), optional
+
+## Database schema
+
+Defined in `backend/prisma/schema.prisma`, 7 tables:
+
+| Table | Purpose |
+|---|---|
+| `user` | All accounts across every role; `password` is bcrypt-hashed; `directors`/`verificationDocuments` are JSON-encoded text |
+| `tender` | A tender package: reference, title, status, closing date |
+| `tenderrequirement` | Mandatory/optional evidence items per tender |
+| `evaluationcriterion` | Scoring weights per tender (must total 100%) |
+| `application` | A bid: form fields, documents (JSON-encoded text), AI screening result, committee notes, status |
+| `auditlog` | Append-only activity trail |
+| `securityalert` | Fraud/misuse flags, resolved/unresolved, with severity |
+
+## Running it locally
+
+**Prerequisites**: Node.js, a running MySQL server, and a database + user already created (see `backend/prisma/schema.prisma` for the shape — `npx prisma db push` will create/sync the tables against an empty database).
 
 ```powershell
+# Backend
 cd backend
 npm install
-npm run dev
+copy .env.example .env    # then fill in DATABASE_URL and JWT_SECRET at minimum
+npx prisma generate
+npx prisma db push        # only needed once, or after a schema change
+npm run dev                # http://localhost:5000
 ```
 
-Backend: `http://localhost:5000`
-
-## Run frontend
-
-Open a second terminal:
-
 ```powershell
+# Frontend (second terminal)
 cd frontend
 npm install
-npm run dev
+npm run dev                # http://localhost:5173
 ```
 
-Frontend: `http://localhost:5173`
+Useful backend scripts: `npm run db:studio` (visual database browser), `npm run db:generate` (regenerate the Prisma client after a schema edit), `npm run db:pull` (re-sync the schema file from the live database), `npm run build` + `npm start` (production build).
 
-Optional frontend API override:
+## Login credentials for testing
 
-```text
-frontend/.env
-VITE_API_URL=http://localhost:5000/api
-```
+Kept out of this file and out of the login page itself so the app doesn't advertise test accounts to the public — see `CREDENTIALS.md`.
 
-## Reset demo data
+## API reference
 
-Because there is no database, the backend seed data is restored by restarting the backend process.
-
-```powershell
-Ctrl+C
-npm run dev
-```
-
-The frontend stores only the JWT token in localStorage. Sign out to clear the active session.
+See `API.md` for the full endpoint list.
