@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { PageHeader } from '../../components/Ui'
 
@@ -10,6 +10,7 @@ export default function BacAdjudication() {
   const application = applications.find((item) => item.id === id)
   const tender = application ? tenders.find((item) => item.id === application.tenderId) : undefined
   const [note, setNote] = useState('')
+  const [error, setError] = useState('')
 
   if (!application || !tender || tender.status !== 'ADJUDICATION' || application.status !== 'SHORTLISTED') {
     return <div className="empty-state"><h3>Adjudication is not available</h3><p>This case must complete BEC evaluation before the BAC can review it.</p><button className="button secondary" onClick={() => navigate('/bac')}>Return to adjudication register</button></div>
@@ -17,16 +18,15 @@ export default function BacAdjudication() {
 
   const submit = async (decision: 'APPROVE' | 'RETURN') => {
     if (note.trim().length < 10) return
-    if (decision === 'APPROVE') {
-      await decideApplication(application.id, 'SHORTLISTED', note)
-    } else {
-      await decideApplication(application.id, 'REVIEW_REQUIRED', note)
-    }
+    const result = decision === 'APPROVE'
+      ? await decideApplication(application.id, 'SHORTLISTED', note)
+      : await decideApplication(application.id, 'REVIEW_REQUIRED', note)
+    if (!result.ok) { setError(result.message ?? 'The adjudication decision could not be recorded.'); return }
     navigate('/bac')
   }
 
   return <>
-    <PageHeader title="Adjudication case" description={`${application.tenderReference} · ${application.companyName}`} action={<button className="button secondary" onClick={() => navigate('/bac')}>Back to register</button>} />
+    <PageHeader title="Adjudication case" description={`${application.tenderReference} · ${application.companyName}`} action={<div className="form-actions"><Link className="button secondary" to={`/applications/${application.id}/report`}>View full report</Link><button className="button secondary" onClick={() => navigate('/bac')}>Back to register</button></div>} />
     <div className="two-column">
       <div className="card">
         <span className="eyebrow">BEC recommendation</span>
@@ -38,7 +38,7 @@ export default function BacAdjudication() {
         <div className="file-list static">{application.documents.map((document) => <span key={document}>{document}</span>)}</div>
         <div className="notice info"><strong>Separation of duties</strong><span>The BAC records the adjudication rationale. Final award authority remains with the authorised approver.</span></div>
       </div>
-      <div className="card form-card"><span className="eyebrow">Committee decision</span><label>Adjudication rationale<textarea rows={7} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Explain why the recommendation is supported or returned." required /></label><div className="form-actions"><button className="button secondary" onClick={() => submit('RETURN')} disabled={note.trim().length < 10}>Return to BEC</button><button className="button primary" onClick={() => submit('APPROVE')} disabled={note.trim().length < 10}>Refer to final approval</button></div></div>
+      <div className="card form-card"><span className="eyebrow">Committee decision</span><label>Adjudication rationale<textarea rows={7} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Explain why the recommendation is supported or returned." required /></label>{error && <div className="error-box">{error}</div>}<div className="form-actions"><button className="button secondary" onClick={() => submit('RETURN')} disabled={note.trim().length < 10}>Return to BEC</button><button className="button primary" onClick={() => submit('APPROVE')} disabled={note.trim().length < 10}>Refer to final approval</button></div></div>
     </div>
   </>
 }

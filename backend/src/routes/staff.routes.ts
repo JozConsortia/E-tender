@@ -1,113 +1,147 @@
 import { Router } from 'express'
-import { applications, auditLogs, tenders, users } from '../data/store.js'
+import { prisma } from '../prisma.js'
 import { authenticate, authorize } from '../middleware/auth.js'
 import { analyzeApplication } from '../services/ai.service.js'
 import { addAudit, syncTenderLifecycle } from '../services/workflow.service.js'
+import { parseJsonArray, toApplicationDTO, toAuditDTO, toSafeUser } from '../lib/serialize.js'
 
 const router = Router()
 
-router.get('/users', authenticate, authorize('ADMIN'), (_req, res) => {
-  const safe = users.map(({ password: _p, ...user }) => user)
-  return res.json(safe)
+router.get('/users', authenticate, authorize('ADMIN'), async (_req, res) => {
+  const users = await prisma.user.findMany()
+  return res.json(users.map(toSafeUser))
 })
 
-router.post('/users/:id/verification', authenticate, authorize('ADMIN'), (req, res) => {
-  const user = users.find((u) => u.id === req.params.id && u.role === 'APPLICANT')
+router.post('/users/:id/verification', authenticate, authorize('ADMIN'), async (req, res) => {
+  const user = await prisma.user.findFirst({ where: { id: String(req.params.id), role: 'APPLICANT' } })
   if (!user) return res.status(404).json({ message: 'Applicant not found.' })
   const status = req.body?.status
   const note = String(req.body?.note ?? '').trim()
   if (!['APPROVED', 'REJECTED'].includes(status)) return res.status(400).json({ message: 'Invalid verification status.' })
   if (status === 'APPROVED') {
-    const conflict = (user.directors ?? []).some((d) => users.some((s) => ['ADMIN', 'BEC', 'BAC', 'APPROVER', 'AUDITOR'].includes(s.role) && s.name.toLowerCase() === d.toLowerCase()))
+    const directors = parseJsonArray(user.directors) ?? []
+    const staff = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'BEC', 'BAC', 'APPROVER', 'AUDITOR'] } } })
+    const conflict = directors.some((d) => staff.some((s) => s.name.toLowerCase() === d.toLowerCase()))
     if (conflict) return res.status(400).json({ message: 'A staff director conflict prevents approval.' })
   }
-  user.verificationStatus = status
-  user.verificationNote = note
-  addAudit(req.user!.name, `${status === 'APPROVED' ? 'Approved' : 'Rejected'} company verification`, user.organisation ?? user.email)
-  const { password: _p, ...safe } = user
-  return res.json(safe)
+  const updated = await prisma.user.update({ where: { id: user.id }, data: { verificationStatus: status, verificationNote: note } })
+  await addAudit(req.user!.name, `${status === 'APPROVED' ? 'Approved' : 'Rejected'} company verification`, updated.organisation ?? updated.email)
+  return res.json(toSafeUser(updated))
 })
 
-router.get('/audit', authenticate, authorize('ADMIN', 'AUDITOR'), (_req, res) => res.json(auditLogs))
-
-router.get('/bec/evaluations', authenticate, authorize('BEC'), (req, res) => {
-  syncTenderLifecycle()
-  const activeTenders = new Set(tenders.filter((t) => t.status === 'EVALUATION').map((t) => t.id))
-  return res.json(applications.filter((a) => activeTenders.has(a.tenderId) && a.status === 'SUBMITTED' && (a.missingMandatoryDocuments?.length ?? 0) === 0 && (a.validDocuments?.length ?? a.documents.length) > 0))
+router.get('/audit', authenticate, authorize('ADMIN', 'AUDITOR'), async (_req, res) => {
+  const logs = await prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' } })
+  return res.json(logs.map(toAuditDTO))
 })
 
-router.post('/bec/evaluations/:id', authenticate, authorize('BEC'), (req, res) => {
-  syncTenderLifecycle()
-  const application = applications.find((a) => a.id === req.params.id)
-  const tender = application ? tenders.find((t) => t.id === application.tenderId) : undefined
-  if (!application || !tender || tender.status !== 'EVALUATION' || application.status !== 'SUBMITTED') return res.status(400).json({ message: 'This application is not available for BEC evaluation.' })
+router.get('/bec/evaluations', authenticate, authorize('BEC'), async (_req, res) => {
+  await syncTenderLifecycle()
+  const applications = await prisma.application.findMany({ where: { status: 'UNDER_EVALUATION', tender: { status: 'EVALUATION' } } })
+  const filtered = applications.filter((application) => {
+    const missing = parseJsonArray(application.missingMandatoryDocuments)?.length ?? 0
+    const valid = parseJsonArray(application.validDocuments)?.length ?? parseJsonArray(application.documents)?.length ?? 0
+    return missing === 0 && valid > 0
+  })
+  return res.json(filtered.map(toApplicationDTO))
+})
+
+router.post('/bec/evaluations/:id', authenticate, authorize('BEC'), async (req, res) => {
+  await syncTenderLifecycle()
+  const application = await prisma.application.findUnique({ where: { id: String(req.params.id) }, include: { tender: { include: { requirements: true } } } })
+  if (!application || application.tender.status !== 'EVALUATION' || application.status !== 'UNDER_EVALUATION') return res.status(400).json({ message: 'This application is not available for BEC evaluation.' })
+
   const score = Math.max(0, Math.min(100, Math.round(Number(req.body?.score))))
   const note = String(req.body?.note ?? '').trim()
   if (!note || note.length < 10) return res.status(400).json({ message: 'A BEC rationale of at least 10 characters is required.' })
-  const ai = application.aiScore === undefined ? analyzeApplication(application, tender) : { aiScore: application.aiScore, aiRecommendation: application.aiRecommendation ?? (application.aiScore >= 70 ? 'QUALIFY' : 'REVIEW REQUIRED'), aiSummary: application.aiSummary ?? 'AI-assisted analysis available.' }
-  application.status = score >= 70 ? 'SHORTLISTED' : 'REVIEW_REQUIRED'
-  application.aiScore = ai.aiScore
-  application.aiRecommendation = ai.aiRecommendation
-  application.aiSummary = ai.aiSummary
-  application.finalScore = score
-  application.functionalityScore = Math.round(score * 0.4)
-  application.priceScore = Math.round(score * 0.3)
-  application.preferenceScore = score - application.functionalityScore - application.priceScore
-  application.becNote = note
-  addAudit(req.user!.name, 'Submitted BEC evaluation', `Application ${application.id}`)
-  syncTenderLifecycle()
-  return res.json(application)
+
+  const ai = application.aiScore === null
+    ? analyzeApplication({ documents: parseJsonArray(application.documents) ?? [] }, application.tender)
+    : { aiScore: application.aiScore, aiRecommendation: application.aiRecommendation ?? (application.aiScore >= 70 ? 'QUALIFY' : 'REVIEW REQUIRED'), aiSummary: application.aiSummary ?? 'AI-assisted analysis available.' }
+
+  const functionalityScore = Math.round(score * 0.4)
+  const priceScore = Math.round(score * 0.3)
+
+  const updated = await prisma.application.update({
+    where: { id: application.id },
+    data: {
+      status: score >= 70 ? 'SHORTLISTED' : 'REVIEW_REQUIRED',
+      aiScore: ai.aiScore,
+      aiRecommendation: ai.aiRecommendation,
+      aiSummary: ai.aiSummary,
+      finalScore: score,
+      functionalityScore,
+      priceScore,
+      preferenceScore: score - functionalityScore - priceScore,
+      becNote: note,
+    },
+  })
+  await addAudit(req.user!.name, 'Submitted BEC evaluation', `Application ${application.id}`)
+  await syncTenderLifecycle()
+  return res.json(toApplicationDTO(updated))
 })
 
-router.get('/bac/cases', authenticate, authorize('BAC'), (req, res) => {
-  syncTenderLifecycle()
-  const ids = new Set(tenders.filter((t) => t.status === 'ADJUDICATION').map((t) => t.id))
-  return res.json(applications.filter((a) => ids.has(a.tenderId) && a.status === 'SHORTLISTED'))
+router.get('/bac/cases', authenticate, authorize('BAC'), async (_req, res) => {
+  await syncTenderLifecycle()
+  const applications = await prisma.application.findMany({ where: { status: 'SHORTLISTED', tender: { status: 'ADJUDICATION' } } })
+  return res.json(applications.map(toApplicationDTO))
 })
 
-router.post('/bac/cases/:id', authenticate, authorize('BAC'), (req, res) => {
-  syncTenderLifecycle()
-  const application = applications.find((a) => a.id === req.params.id)
-  const tender = application ? tenders.find((t) => t.id === application.tenderId) : undefined
+router.post('/bac/cases/:id', authenticate, authorize('BAC'), async (req, res) => {
+  await syncTenderLifecycle()
+  const application = await prisma.application.findUnique({ where: { id: String(req.params.id) }, include: { tender: true } })
   const decision = req.body?.decision
   const note = String(req.body?.note ?? '').trim()
-  if (!application || !tender || tender.status !== 'ADJUDICATION' || application.status !== 'SHORTLISTED') return res.status(400).json({ message: 'This case is not available for BAC adjudication.' })
+  if (!application || application.tender.status !== 'ADJUDICATION' || application.status !== 'SHORTLISTED') return res.status(400).json({ message: 'This case is not available for BAC adjudication.' })
   if (!note || note.length < 10) return res.status(400).json({ message: 'A BAC rationale of at least 10 characters is required.' })
-  if (decision === 'APPROVE') { application.bacNote = note; tender.status = 'APPROVAL'; addAudit(req.user!.name, 'Referred recommendation to final approval', tender.reference) }
-  else if (decision === 'RETURN') { application.status = 'REVIEW_REQUIRED'; application.bacNote = note; tender.status = 'EVALUATION'; addAudit(req.user!.name, 'Returned recommendation to BEC', tender.reference) }
-  else return res.status(400).json({ message: 'Invalid adjudication decision.' })
-  return res.json(application)
+
+  let updated
+  if (decision === 'APPROVE') {
+    updated = await prisma.application.update({ where: { id: application.id }, data: { bacNote: note } })
+    await prisma.tender.update({ where: { id: application.tenderId }, data: { status: 'APPROVAL' } })
+    await addAudit(req.user!.name, 'Referred recommendation to final approval', application.tender.reference)
+  } else if (decision === 'RETURN') {
+    updated = await prisma.application.update({ where: { id: application.id }, data: { status: 'REVIEW_REQUIRED', bacNote: note } })
+    await prisma.tender.update({ where: { id: application.tenderId }, data: { status: 'EVALUATION' } })
+    await addAudit(req.user!.name, 'Returned recommendation to BEC', application.tender.reference)
+  } else {
+    return res.status(400).json({ message: 'Invalid adjudication decision.' })
+  }
+  return res.json(toApplicationDTO(updated))
 })
 
-router.get('/approval/pending', authenticate, authorize('APPROVER'), (req, res) => {
-  syncTenderLifecycle()
-  const ids = new Set(tenders.filter((t) => t.status === 'APPROVAL').map((t) => t.id))
-  return res.json(applications.filter((a) => ids.has(a.tenderId) && a.status === 'SHORTLISTED'))
+router.get('/approval/pending', authenticate, authorize('APPROVER'), async (_req, res) => {
+  await syncTenderLifecycle()
+  const applications = await prisma.application.findMany({ where: { status: 'SHORTLISTED', tender: { status: 'APPROVAL' } } })
+  return res.json(applications.map(toApplicationDTO))
 })
 
-router.post('/approval/:id', authenticate, authorize('APPROVER'), (req, res) => {
-  syncTenderLifecycle()
-  const application = applications.find((a) => a.id === req.params.id)
-  const tender = application ? tenders.find((t) => t.id === application.tenderId) : undefined
+router.post('/approval/:id', authenticate, authorize('APPROVER'), async (req, res) => {
+  await syncTenderLifecycle()
+  const application = await prisma.application.findUnique({ where: { id: String(req.params.id) }, include: { tender: true } })
   const decision = req.body?.decision
   const note = String(req.body?.note ?? '').trim()
-  if (!application || !tender || tender.status !== 'APPROVAL' || application.status !== 'SHORTLISTED') return res.status(400).json({ message: 'This case is not available for final approval.' })
+  if (!application || application.tender.status !== 'APPROVAL' || application.status !== 'SHORTLISTED') return res.status(400).json({ message: 'This case is not available for final approval.' })
   if (!note || note.length < 10) return res.status(400).json({ message: 'An approval rationale of at least 10 characters is required.' })
+
+  let updated
   if (decision === 'APPROVE') {
-    for (const item of applications.filter((a) => a.tenderId === tender.id)) item.status = item.id === application.id ? 'SUCCESSFUL' : 'UNSUCCESSFUL'
-    application.approvalNote = note
-    tender.status = 'AWARDED'
-    addAudit(req.user!.name, 'Approved final award', tender.reference)
+    await prisma.application.updateMany({ where: { tenderId: application.tenderId, NOT: { id: application.id } }, data: { status: 'UNSUCCESSFUL' } })
+    updated = await prisma.application.update({ where: { id: application.id }, data: { status: 'SUCCESSFUL', approvalNote: note } })
+    await prisma.tender.update({ where: { id: application.tenderId }, data: { status: 'AWARDED' } })
+    await addAudit(req.user!.name, 'Approved final award', application.tender.reference)
   } else if (decision === 'RETURN') {
-    application.approvalNote = note
-    tender.status = 'ADJUDICATION'
-    addAudit(req.user!.name, 'Returned award recommendation to BAC', tender.reference)
+    updated = await prisma.application.update({ where: { id: application.id }, data: { approvalNote: note } })
+    await prisma.tender.update({ where: { id: application.tenderId }, data: { status: 'ADJUDICATION' } })
+    await addAudit(req.user!.name, 'Returned award recommendation to BAC', application.tender.reference)
   } else if (decision === 'DECLINE') {
-    for (const item of applications.filter((a) => a.tenderId === tender.id)) { item.status = 'UNSUCCESSFUL'; item.approvalNote = note }
-    tender.status = 'CANCELLED'
-    addAudit(req.user!.name, 'Declined final award', tender.reference)
-  } else return res.status(400).json({ message: 'Invalid approval decision.' })
-  return res.json(application)
+    await prisma.application.updateMany({ where: { tenderId: application.tenderId }, data: { status: 'UNSUCCESSFUL', approvalNote: note } })
+    updated = await prisma.application.findUniqueOrThrow({ where: { id: application.id } })
+    await prisma.tender.update({ where: { id: application.tenderId }, data: { status: 'CANCELLED' } })
+    await addAudit(req.user!.name, 'Declined final award', application.tender.reference)
+  } else {
+    return res.status(400).json({ message: 'Invalid approval decision.' })
+  }
+  return res.json(toApplicationDTO(updated))
 })
 
 export default router

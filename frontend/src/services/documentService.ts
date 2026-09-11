@@ -1,3 +1,5 @@
+import { TOKEN_KEY } from '../api'
+
 export type DocumentAnalysisResponse = {
   success: boolean;
   file: {
@@ -30,8 +32,10 @@ export async function analyseDocument(file: File): Promise<DocumentAnalysisRespo
   const formData = new FormData();
   formData.append('document', file);
 
+  const token = localStorage.getItem(TOKEN_KEY);
   const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/analyse`, {
     method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body: formData,
   });
 

@@ -7,7 +7,7 @@ export default function Landing() {
       {/* Government-style top navigation */}
       <div className="landing-nav treasury-nav">
         <div className="brand landing-brand">
-          <span className="brand-mark">MP</span>
+          <span className="brand-mark logo-mark"><img src="/mpumalanga-logo.jpeg" alt="Mpumalanga Provincial Government" /></span>
 
           <span>
             <strong>Mpumalanga Provincial Treasury</strong>
@@ -472,8 +472,8 @@ export default function Landing() {
         <div className="footer-brand">
 
           <div className="brand">
-            <span className="brand-mark">
-              MP
+            <span className="brand-mark logo-mark">
+              <img src="/mpumalanga-logo.jpeg" alt="Mpumalanga Provincial Government" />
             </span>
 
             <span>

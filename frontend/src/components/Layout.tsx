@@ -7,6 +7,7 @@ const navByRole = {
     ['Tenders', '/admin/tenders'],
     ['Create Tender', '/admin/tenders/create'],
     ['Company Verification', '/admin/companies'],
+    ['Document Assessment', '/admin/documents'],
     ['Audit Logs', '/admin/audit'],
   ],
   APPLICANT: [
@@ -39,8 +40,8 @@ export function Layout() {
     <div className="app-shell">
       <aside className="sidebar">
         <Link className="brand" to={items[0]?.[1] ?? '/'}>
-          <span className="brand-mark">PC</span>
-          <span><strong>procuretech combined</strong><small>Procurement Portal</small></span>
+          <span className="brand-mark logo-mark"><img src="/mpumalanga-logo.jpeg" alt="Mpumalanga Provincial Government" /></span>
+          <span><strong>Mpumalanga Provincial Treasury</strong><small>Procurement Portal</small></span>
         </Link>
         <div className="role-chip"><span className="status-dot" />{roleLabel(currentUser.role)}</div>
         <nav className="side-nav">

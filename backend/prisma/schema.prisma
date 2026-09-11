@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Application {
+  id                        String   @id @default(cuid())
+  tenderId                  String
+  tenderReference           String
+  tenderTitle               String
+  companyName               String
+  applicantId               String
+  submittedAt               DateTime @default(now())
+  status                    String   @default("SUBMITTED")
+  bidSummary                String?  @db.Text
+  technicalApproach         String?  @db.Text
+  deliveryTimeline          String?  @db.Text
+  pricingAmount             Float?
+  complianceDeclaration     Boolean  @default(false)
+  documents                 String   @db.Text
+  validDocuments            String?  @db.Text
+  rejectedDocuments         String?  @db.Text
+  missingMandatoryDocuments String?  @db.Text
+  aiScore                   Int?
+  aiRecommendation          String?
+  aiSummary                 String?  @db.Text
+  functionalityScore        Int?
+  priceScore                Int?
+  preferenceScore           Int?
+  finalScore                Int?
+  becNote                   String?  @db.Text
+  bacNote                   String?  @db.Text
+  approvalNote              String?  @db.Text
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  applicant                 User     @relation(fields: [applicantId], references: [id], onDelete: Cascade, map: "Application_applicantId_fkey")
+  tender                    Tender   @relation(fields: [tenderId], references: [id], onDelete: Cascade, map: "Application_tenderId_fkey")
+
+  @@index([applicantId], map: "Application_applicantId_fkey")
+  @@index([tenderId], map: "Application_tenderId_fkey")
+  @@map("application")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  time      String
+  actor     String
+  action    String
+  target    String
+  createdAt DateTime @default(now())
+
+  @@map("auditlog")
+}
+
+model EvaluationCriterion {
+  id        String   @id @default(cuid())
+  tenderId  String
+  title     String
+  weight    Int
+  maxScore  Int
+  createdAt DateTime @default(now())
+  tender    Tender   @relation(fields: [tenderId], references: [id], onDelete: Cascade, map: "EvaluationCriterion_tenderId_fkey")
+
+  @@index([tenderId], map: "EvaluationCriterion_tenderId_fkey")
+  @@map("evaluationcriterion")
+}
+
+model Tender {
+  id           String                @id @default(cuid())
+  reference    String                @unique(map: "Tender_reference_key")
+  title        String
+  department   String
+  description  String                @db.Text
+  closingDate  DateTime
+  status       String                @default("DRAFT")
+  publishedAt  DateTime?
+  createdById  String?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  applications Application[]
+  criteria     EvaluationCriterion[]
+  createdBy    User?                 @relation(fields: [createdById], references: [id], map: "Tender_createdById_fkey")
+  requirements TenderRequirement[]
+
+  @@index([createdById], map: "Tender_createdById_fkey")
+  @@map("tender")
+}
+
+model TenderRequirement {
+  id        String   @id @default(cuid())
+  tenderId  String
+  title     String
+  mandatory Boolean  @default(true)
+  createdAt DateTime @default(now())
+  tender    Tender   @relation(fields: [tenderId], references: [id], onDelete: Cascade, map: "TenderRequirement_tenderId_fkey")
+
+  @@index([tenderId], map: "TenderRequirement_tenderId_fkey")
+  @@map("tenderrequirement")
+}
+
+model User {
+  id                    String              @id @default(cuid())
+  name                  String
+  email                 String              @unique(map: "User_email_key")
+  password              String
+  role                  Role
+  organisation          String?
+  directors             String?             @db.Text
+  verificationStatus    VerificationStatus? @default(PENDING)
+  verificationNote      String?             @db.Text
+  verificationDocuments String?             @db.Text
+  failedLoginAttempts   Int                 @default(0)
+  lockedUntil           DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  applications          Application[]
+  tendersCreated        Tender[]
+
+  @@map("user")
+}
+
+model SecurityAlert {
+  id         String    @id @default(cuid())
+  type       String
+  severity   String    @default("MEDIUM")
+  message    String    @db.Text
+  targetType String?
+  targetId   String?
+  resolved   Boolean   @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([resolved])
+  @@index([createdAt])
+  @@map("securityalert")
+}
+
+enum Role {
+  ADMIN
+  APPLICANT
+  BEC
+  BAC
+  APPROVER
+  AUDITOR
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

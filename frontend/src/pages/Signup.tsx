@@ -32,7 +32,7 @@ export default function Signup() {
 
   return <div className="login-page">
     <div className="login-panel signup-panel">
-      <Link to="/" className="brand"><span className="brand-mark">PC</span><span><strong>procuretech combined</strong><small>Procurement Portal</small></span></Link>
+      <Link to="/" className="brand"><span className="brand-mark logo-mark"><img src="/mpumalanga-logo.jpeg" alt="Mpumalanga Provincial Government" /></span><span><strong>Mpumalanga Provincial Treasury</strong><small>Procurement Portal</small></span></Link>
       <div className="login-copy"><span className="eyebrow">Supplier onboarding</span><h1>Register your company.</h1><p>Submit your company details and supporting documents for verification before responding to tenders.</p></div>
       <form onSubmit={submit} className="login-form">
         <label>Contact name<input value={name} onChange={(event) => setName(event.target.value)} required /></label>

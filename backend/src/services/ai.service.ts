@@ -1,10 +1,12 @@
-import type { Application, Tender } from '../types/models.js'
+import type { TenderRequirement } from '../types/models.js'
+
+type RequirementSource = { requirements: Pick<TenderRequirement, 'id' | 'title' | 'mandatory'>[] }
 
 function normalize(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 }
 
-function requirementMatchesDocument(requirement: Tender['requirements'][number], documentName: string) {
+function requirementMatchesDocument(requirement: Pick<TenderRequirement, 'title'>, documentName: string) {
   const requirementText = normalize(requirement.title)
   const docText = normalize(documentName)
   const requirementWords = requirementText.split(/\s+/).filter(Boolean)
@@ -20,7 +22,7 @@ function requirementMatchesDocument(requirement: Tender['requirements'][number],
   return requirementText.includes(docText) || docText.includes(requirementText)
 }
 
-export function validateSubmittedDocuments(documents: string[], tender: Tender) {
+export function validateSubmittedDocuments(documents: string[], tender: RequirementSource) {
   const validDocuments: string[] = []
   const rejectedDocuments: string[] = []
   const matchedRequirementIds = new Set<string>()
@@ -60,7 +62,7 @@ export function validateSubmittedDocuments(documents: string[], tender: Tender) 
   }
 }
 
-export function analyzeApplication(application: Application, tender: Tender) {
+export function analyzeApplication(application: { documents: string[] }, tender: RequirementSource) {
   const validation = validateSubmittedDocuments(application.documents, tender)
 
   return {

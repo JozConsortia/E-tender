@@ -10,6 +10,8 @@ import Tenders from './pages/admin/Tenders'
 import CreateTender from './pages/admin/CreateTender'
 import AdminAudit from './pages/admin/Audit'
 import CompanyVerification from './pages/admin/CompanyVerification'
+import DocumentValidation from './pages/DocumentValidation'
+import ApplicationReport from './pages/ApplicationReport'
 import ApplicantTenders from './pages/applicant/Tenders'
 import TenderDetails from './pages/applicant/TenderDetails'
 import Outcomes from './pages/applicant/Outcomes'
@@ -39,6 +41,7 @@ export default function App() {
           <Route path="/admin/tenders/create" element={<CreateTender />} />
           <Route path="/admin/audit" element={<AdminAudit />} />
           <Route path="/admin/companies" element={<CompanyVerification />} />
+          <Route path="/admin/documents" element={<DocumentValidation />} />
         </Route>
 
         <Route element={<ProtectedRoute roles={['APPLICANT']} />}>
@@ -71,6 +74,10 @@ export default function App() {
         <Route element={<ProtectedRoute roles={['AUDITOR']} />}>
           <Route path="/auditor" element={<AuditorDashboard />} />
           <Route path="/auditor/audit" element={<AuditorAudit />} />
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['BEC', 'BAC', 'APPROVER', 'ADMIN', 'AUDITOR']} />}>
+          <Route path="/applications/:id/report" element={<ApplicationReport />} />
         </Route>
       </Route>
 

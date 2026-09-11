@@ -76,6 +76,11 @@ export interface Application {
   applicantId: string
   submittedAt: string
   status: ApplicationStatus
+  bidSummary?: string
+  technicalApproach?: string
+  deliveryTimeline?: string
+  pricingAmount?: number
+  complianceDeclaration?: boolean
   documents: string[]
   aiScore?: number
   aiRecommendation?: string

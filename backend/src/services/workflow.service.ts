@@ -1,24 +1,29 @@
-import { applications, auditLogs, tenders } from '../data/store.js'
+import { randomUUID } from 'node:crypto'
+import { prisma } from '../prisma.js'
 
-function log(actor: string, action: string, target: string) {
-  auditLogs.unshift({ id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, time: new Date().toLocaleString('en-ZA', { hour12: false }).replace(',', ''), actor, action, target })
+function formatTime(date: Date) {
+  return date.toLocaleString('en-ZA', { hour12: false }).replace(',', '')
 }
 
-export function syncTenderLifecycle() {
-  for (const tender of tenders) {
-    if (tender.status === 'PUBLISHED' && new Date(tender.closingDate).getTime() <= Date.now()) {
-      tender.status = 'EVALUATION'
-      for (const application of applications.filter((item) => item.tenderId === tender.id && item.status === 'SUBMITTED')) application.status = 'UNDER_EVALUATION'
-      log('System', 'Moved tender to evaluation after closing', tender.reference)
-    }
-    if (tender.status === 'EVALUATION') {
-      const related = applications.filter((item) => item.tenderId === tender.id)
-      if (related.length > 0 && related.every((item) => ['SHORTLISTED', 'REVIEW_REQUIRED'].includes(item.status))) {
-        tender.status = 'ADJUDICATION'
-        log('System', 'Completed BEC evaluation stage', tender.reference)
-      }
+export async function addAudit(actor: string, action: string, target: string) {
+  await prisma.auditLog.create({ data: { id: `log-${randomUUID()}`, time: formatTime(new Date()), actor, action, target } })
+}
+
+export async function syncTenderLifecycle() {
+  const now = new Date()
+
+  const closingPublishedTenders = await prisma.tender.findMany({ where: { status: 'PUBLISHED', closingDate: { lte: now } } })
+  for (const tender of closingPublishedTenders) {
+    await prisma.tender.update({ where: { id: tender.id }, data: { status: 'EVALUATION' } })
+    await prisma.application.updateMany({ where: { tenderId: tender.id, status: 'SUBMITTED' }, data: { status: 'UNDER_EVALUATION' } })
+    await addAudit('System', 'Moved tender to evaluation after closing', tender.reference)
+  }
+
+  const evaluationTenders = await prisma.tender.findMany({ where: { status: 'EVALUATION' }, include: { applications: { select: { status: true } } } })
+  for (const tender of evaluationTenders) {
+    if (tender.applications.length > 0 && tender.applications.every((application) => ['SHORTLISTED', 'REVIEW_REQUIRED'].includes(application.status))) {
+      await prisma.tender.update({ where: { id: tender.id }, data: { status: 'ADJUDICATION' } })
+      await addAudit('System', 'Completed BEC evaluation stage', tender.reference)
     }
   }
 }
-
-export function addAudit(actor: string, action: string, target: string) { log(actor, action, target) }

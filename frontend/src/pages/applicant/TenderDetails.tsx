@@ -13,6 +13,11 @@ export default function TenderDetails() {
   const already = useMemo(() => applications.some((application) => application.tenderId === id && application.applicantId === currentUser?.id), [applications, id, currentUser?.id])
   const verified = currentUser?.verificationStatus === 'APPROVED'
   const [files, setFiles] = useState<Record<string, string>>({})
+  const [bidSummary, setBidSummary] = useState('')
+  const [technicalApproach, setTechnicalApproach] = useState('')
+  const [deliveryTimeline, setDeliveryTimeline] = useState('')
+  const [pricingAmount, setPricingAmount] = useState('')
+  const [complianceDeclaration, setComplianceDeclaration] = useState(false)
   const [error, setError] = useState('')
 
   if (!tender) return <div className="empty-state"><h3>Tender not found</h3><p>The tender may have been removed from the public application list.</p></div>
@@ -28,7 +33,23 @@ export default function TenderDetails() {
     event.preventDefault()
     const documents = Object.values(files)
     if (!documents.length) { setError('Attach at least one supporting document for AI validation.'); return }
-    const result = await submitApplication(tender.id, currentUser?.organisation ?? '', documents)
+    if (bidSummary.trim().length < 20) { setError('Provide a bid summary of at least 20 characters.'); return }
+    if (technicalApproach.trim().length < 20) { setError('Provide a technical approach of at least 20 characters.'); return }
+    if (!deliveryTimeline.trim()) { setError('Provide a delivery timeline.'); return }
+    const price = Number(pricingAmount)
+    if (!Number.isFinite(price) || price <= 0) { setError('Provide a valid pricing amount.'); return }
+    if (!complianceDeclaration) { setError('You must declare compliance with the tender terms to submit.'); return }
+
+    const result = await submitApplication({
+      tenderId: tender.id,
+      companyName: currentUser?.organisation ?? '',
+      documents,
+      bidSummary: bidSummary.trim(),
+      technicalApproach: technicalApproach.trim(),
+      deliveryTimeline: deliveryTimeline.trim(),
+      pricingAmount: price,
+      complianceDeclaration,
+    })
     if (!result.ok) { setError(result.message ?? 'Your application could not be submitted.'); return }
     navigate('/applicant/outcomes')
   }
@@ -49,6 +70,14 @@ export default function TenderDetails() {
         {pastClosing && tender.status !== 'CANCELLED' && <div className="notice warning"><strong>Application window closed</strong><span>This tender closed on {new Date(tender.closingDate).toLocaleString('en-ZA')}.</span></div>}
         {tender.status !== 'PUBLISHED' && !pastClosing && <div className="notice warning"><strong>Application unavailable</strong><span>This tender is not currently open for applications.</span></div>}
         <label>Applying company<input value={currentUser?.organisation ?? ''} disabled readOnly /></label>
+
+        <label>Bid summary<textarea rows={4} value={bidSummary} onChange={(event) => setBidSummary(event.target.value)} disabled={!canApply} placeholder="Summarise your understanding of the requirement and your proposed solution." required /></label>
+        <label>Technical approach<textarea rows={5} value={technicalApproach} onChange={(event) => setTechnicalApproach(event.target.value)} disabled={!canApply} placeholder="Describe how you will deliver against the published requirements and criteria." required /></label>
+        <div className="form-grid two">
+          <label>Delivery timeline<input value={deliveryTimeline} onChange={(event) => setDeliveryTimeline(event.target.value)} disabled={!canApply} placeholder="e.g. 8 weeks from award" required /></label>
+          <label>Total price (ZAR)<input type="number" min="0" step="0.01" value={pricingAmount} onChange={(event) => setPricingAmount(event.target.value)} disabled={!canApply} placeholder="e.g. 450000" required /></label>
+        </div>
+
         <div className="upload-box">
           <strong>Supporting documents</strong>
           <small>Attach the evidence requested by the published tender. This demo simulates file attachments and does not upload real files.</small>
@@ -59,6 +88,9 @@ export default function TenderDetails() {
               : <button type="button" className="button secondary small" onClick={() => attach(requirement.id, requirement.title)} disabled={!canApply}>+ Attach document</button>}
           </div>)}
         </div>
+
+        <label className="inline-checkbox"><input type="checkbox" checked={complianceDeclaration} onChange={(event) => setComplianceDeclaration(event.target.checked)} disabled={!canApply} /> I declare that this bid complies with the published tender terms and conditions.</label>
+
         {error && <div className="error-box">{error}</div>}
         <div className="notice info"><strong>AI document review</strong><span>The system will validate uploaded evidence, reject unmatched documents, and only send valid requirements to the BEC for review.</span></div>
         {already ? <div className="success-box">You already submitted this tender. The final outcome will appear in Outcomes.</div>

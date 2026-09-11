@@ -18,7 +18,7 @@ interface AppContextValue {
   createTender: (input: Pick<Tender, 'title' | 'department' | 'description' | 'closingDate'> & { requirements: TenderRequirement[]; criteria: EvaluationCriterion[] }) => Promise<Result>
   publishTender: (id: string) => Promise<Result>
   advanceTenderStage: (id: string) => Promise<Result>
-  submitApplication: (tenderId: string, companyName: string, documents: string[]) => Promise<Result>
+  submitApplication: (input: { tenderId: string; companyName: string; documents: string[]; bidSummary: string; technicalApproach: string; deliveryTimeline: string; pricingAmount: number; complianceDeclaration: boolean }) => Promise<Result>
   evaluateApplication: (applicationId: string, score: number, note: string) => Promise<Result>
   decideApplication: (applicationId: string, status: Application['status'], note?: string) => Promise<Result>
   resetDemo: () => void
@@ -100,8 +100,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'The tender stage could not be advanced.' } }
   }
 
-  const submitApplication = async (tenderId: string, companyName: string, documents: string[]): Promise<Result> => {
-    try { await apiFetch('/applications', { method: 'POST', body: JSON.stringify({ tenderId, companyName, documents }) }); await refresh(); return { ok: true } }
+  const submitApplication = async (input: {
+    tenderId: string
+    companyName: string
+    documents: string[]
+    bidSummary: string
+    technicalApproach: string
+    deliveryTimeline: string
+    pricingAmount: number
+    complianceDeclaration: boolean
+  }): Promise<Result> => {
+    try { await apiFetch('/applications', { method: 'POST', body: JSON.stringify(input) }); await refresh(); return { ok: true } }
     catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'Application could not be submitted.' } }
   }
 
