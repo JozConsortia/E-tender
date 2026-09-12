@@ -51,7 +51,7 @@ Application: SUBMITTED -> UNDER_EVALUATION -> SHORTLISTED -> SUCCESSFUL / UNSUCC
                         \-> UNSUCCESSFUL (rejected instantly at submission if mandatory evidence is missing)
 ```
 
-The tender and its applications advance together — a tender only reaches ADJUDICATION once every one of its applications has reached a resolved state (`SHORTLISTED`, `REVIEW_REQUIRED`, `SUCCESSFUL` or `UNSUCCESSFUL`), and only reaches AWARDED once the Approver signs off. An application rejected at submission (missing mandatory evidence) or scored below 70 by BEC does **not** block sibling bids on the same tender from proceeding. `POST /api/tenders/:id/advance` lets an admin force the next transition in a demo/testing context without waiting for a real closing date.
+The tender and its applications advance together — a tender only reaches ADJUDICATION once every one of its applications has reached a resolved state (`SHORTLISTED`, `SUCCESSFUL` or `UNSUCCESSFUL`), and only reaches AWARDED once the Approver signs off. `REVIEW_REQUIRED` is deliberately **not** a resolved state: it means BEC still has work to do on that bid, so the tender stays in EVALUATION — and stays visible in BEC's queue — until BEC re-scores it. An application rejected at submission (missing mandatory evidence) does **not** block sibling bids on the same tender from proceeding. `POST /api/tenders/:id/advance` lets an admin force the next transition in a demo/testing context without waiting for a real closing date.
 
 ## Applicant bid form
 
