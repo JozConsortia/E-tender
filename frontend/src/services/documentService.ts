@@ -23,9 +23,12 @@ export type DocumentAnalysisResponse = {
   validation: {
     hasExpiryDate: boolean;
     isExpired: boolean;
-    status: 'VALID' | 'EXPIRED' | 'NO_EXPIRY_DATE' | 'INVALID_DATE';
+    status: 'GENUINE' | 'LIKELY_FAKE' | 'UNREADABLE' | 'EXPIRED' | 'MANUAL_REVIEW';
+    appearsAuthentic: boolean;
+    isReadable: boolean;
   };
   recommendation: string;
+  summary: string;
 };
 
 export async function analyseDocument(file: File): Promise<DocumentAnalysisResponse> {

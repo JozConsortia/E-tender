@@ -4,6 +4,14 @@ import {
   type DocumentAnalysisResponse
 } from "../services/documentService";
 
+const VERDICT_STYLES: Record<string, { badge: string; label: string; banner: string }> = {
+  GENUINE: { badge: "status-badge success", label: "Genuine", banner: "success-box" },
+  LIKELY_FAKE: { badge: "status-badge danger", label: "Likely fake", banner: "error-box" },
+  UNREADABLE: { badge: "status-badge warning", label: "Unreadable", banner: "notice warning" },
+  EXPIRED: { badge: "status-badge warning", label: "Expired", banner: "notice warning" },
+  MANUAL_REVIEW: { badge: "status-badge warning", label: "Manual review", banner: "notice warning" }
+};
+
 export default function DocumentValidation() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] =
@@ -35,6 +43,8 @@ export default function DocumentValidation() {
       setLoading(false);
     }
   };
+
+  const verdict = result ? (VERDICT_STYLES[result.validation.status] ?? VERDICT_STYLES.MANUAL_REVIEW) : null;
 
   return (
     <div className="page-content">
@@ -108,7 +118,7 @@ export default function DocumentValidation() {
         </div>
       </div>
 
-      {result && (
+      {result && verdict && (
         <div
           className="card"
           style={{
@@ -124,16 +134,8 @@ export default function DocumentValidation() {
               </p>
             </div>
 
-            <span
-              className={
-                result.validation.status === "VALID"
-                  ? "status-badge success"
-                  : result.validation.status === "EXPIRED"
-                    ? "status-badge"
-                    : "status-badge"
-              }
-            >
-              {result.validation.status}
+            <span className={verdict.badge}>
+              {verdict.label}
             </span>
           </div>
 
@@ -144,6 +146,15 @@ export default function DocumentValidation() {
               gap: "14px"
             }}
           >
+
+            <div className={verdict.banner}>
+              {result.summary}
+            </div>
+
+            <div>
+              <strong>Authenticity</strong>
+              <p>{result.validation.appearsAuthentic ? "Appears authentic" : "Does not appear authentic — treat as fake unless independently verified"}</p>
+            </div>
 
             <div>
               <strong>Document Type</strong>
@@ -179,14 +190,14 @@ export default function DocumentValidation() {
             <div>
               <strong>Readability</strong>
               <p>
-                {result.document.isDocumentReadable
+                {result.validation.isReadable
                   ? "Readable"
                   : "Needs manual review"}
               </p>
             </div>
 
             <div>
-              <strong>AI Assessment</strong>
+              <strong>AI Recommendation</strong>
               <p>
                 {result.recommendation}
               </p>

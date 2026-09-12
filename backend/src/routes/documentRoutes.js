@@ -29,30 +29,67 @@ const upload = multer({
   }
 });
 
-function validateExpiry(expiryDate) {
+function checkExpiry(expiryDate) {
   if (!expiryDate) {
-    return {
-      hasExpiryDate: false,
-      isExpired: false,
-      status: "NO_EXPIRY_DATE"
-    };
+    return { hasExpiryDate: false, isExpired: false, status: "NO_EXPIRY_DATE" };
   }
 
   const expiry = new Date(`${expiryDate}T23:59:59`);
   const today = new Date();
 
   if (Number.isNaN(expiry.getTime())) {
-    return {
-      hasExpiryDate: true,
-      isExpired: false,
-      status: "INVALID_DATE"
-    };
+    return { hasExpiryDate: true, isExpired: false, status: "INVALID_DATE" };
   }
 
   return {
     hasExpiryDate: true,
     isExpired: expiry < today,
     status: expiry < today ? "EXPIRED" : "VALID"
+  };
+}
+
+// Combines Gemini's authenticity/readability judgement with the rule-based expiry
+// check into a single overall verdict, so a fake document is unmistakably flagged
+// and a genuine one (even without an expiry date, e.g. a certificate of incorporation)
+// is reported as such rather than as an ambiguous "manual review".
+function buildVerdict(analysis, expiryCheck) {
+  const appearsAuthentic = analysis.appearsAuthentic !== false;
+  const isReadable = analysis.isDocumentReadable !== false;
+
+  if (!appearsAuthentic) {
+    return {
+      status: "LIKELY_FAKE",
+      recommendation: "REJECTED",
+      summary: "This document does not appear to be authentic. Do not accept it as valid evidence without further verification."
+    };
+  }
+  if (!isReadable) {
+    return {
+      status: "UNREADABLE",
+      recommendation: "MANUAL_REVIEW",
+      summary: "The document could not be read clearly enough for AI screening. A human reviewer should inspect the original file."
+    };
+  }
+  if (expiryCheck.status === "EXPIRED") {
+    return {
+      status: "EXPIRED",
+      recommendation: "REVIEW_REQUIRED",
+      summary: "The document appears genuine but has expired. Request an updated version before relying on it."
+    };
+  }
+  if (expiryCheck.status === "INVALID_DATE") {
+    return {
+      status: "MANUAL_REVIEW",
+      recommendation: "MANUAL_REVIEW",
+      summary: "The document appears genuine but its expiry date could not be parsed. A human reviewer should confirm validity."
+    };
+  }
+  return {
+    status: "GENUINE",
+    recommendation: "DOCUMENT_VALID",
+    summary: expiryCheck.hasExpiryDate
+      ? "This document appears authentic, readable, and currently valid."
+      : "This document appears authentic and readable. It has no expiry date to check (normal for documents such as certificates of incorporation)."
   };
 }
 
@@ -69,10 +106,8 @@ router.post(
       }
 
       const analysis = await analyseDocument(req.file);
-
-      const expiryCheck = validateExpiry(
-        analysis.expiryDate
-      );
+      const expiryCheck = checkExpiry(analysis.expiryDate);
+      const verdict = buildVerdict(analysis, expiryCheck);
 
       const result = {
         success: true,
@@ -85,14 +120,15 @@ router.post(
 
         document: analysis,
 
-        validation: expiryCheck,
+        validation: {
+          ...expiryCheck,
+          status: verdict.status,
+          appearsAuthentic: analysis.appearsAuthentic !== false,
+          isReadable: analysis.isDocumentReadable !== false
+        },
 
-        recommendation:
-          expiryCheck.status === "EXPIRED"
-            ? "REVIEW_REQUIRED"
-            : expiryCheck.status === "VALID"
-              ? "DOCUMENT_VALID"
-              : "MANUAL_REVIEW"
+        recommendation: verdict.recommendation,
+        summary: verdict.summary
       };
 
       res.json(result);
