@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { apiFetch, TOKEN_KEY } from '../api'
 import { demoApplications, demoAuditLogs, demoTenders, demoUsers } from '../data/demo'
-import type { Application, AuditEntry, DemoUser, Role, SecurityAlert, Tender, TenderRequirement, EvaluationCriterion, VerificationStatus } from '../types'
+import type { Application, AuditEntry, DemoUser, Role, SbdForm, SecurityAlert, Tender, TenderRequirement, EvaluationCriterion, VerificationStatus } from '../types'
 
 type Result = { ok: boolean; message?: string; user?: DemoUser }
 interface AppContextValue {
@@ -20,7 +20,7 @@ interface AppContextValue {
   createTender: (input: Pick<Tender, 'title' | 'department' | 'description' | 'closingDate'> & { requirements: TenderRequirement[]; criteria: EvaluationCriterion[] }) => Promise<Result>
   publishTender: (id: string) => Promise<Result>
   advanceTenderStage: (id: string) => Promise<Result>
-  submitApplication: (input: { tenderId: string; companyName: string; documents: string[]; bidSummary: string; technicalApproach: string; deliveryTimeline: string; pricingAmount: number; complianceDeclaration: boolean }) => Promise<Result>
+  submitApplication: (input: { tenderId: string; companyName: string; documents: string[]; bidSummary: string; technicalApproach: string; deliveryTimeline: string; pricingAmount: number; complianceDeclaration: boolean; quotationDocuments: string[]; sbdForm: SbdForm }) => Promise<Result>
   evaluateApplication: (applicationId: string, score: number, note: string) => Promise<Result>
   decideApplication: (applicationId: string, status: Application['status'], note?: string) => Promise<Result>
   resolveAlert: (alertId: string) => Promise<Result>
@@ -118,6 +118,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deliveryTimeline: string
     pricingAmount: number
     complianceDeclaration: boolean
+    quotationDocuments: string[]
+    sbdForm: SbdForm
   }): Promise<Result> => {
     try { await apiFetch('/applications', { method: 'POST', body: JSON.stringify(input) }); await refresh(); return { ok: true } }
     catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'Application could not be submitted.' } }

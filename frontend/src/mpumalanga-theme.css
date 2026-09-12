@@ -1756,3 +1756,63 @@ table tbody tr:hover {
     gap: 7px;
   }
 }
+
+/* bid wizard */
+.wizard-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.wizard-tab {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: #49556a;
+  border-radius: 9px;
+  padding: 9px 13px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.wizard-tab.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+.wizard-panel h3:first-child {
+  margin-top: 0;
+}
+
+.wizard-panel .form-section:first-of-type {
+  margin-top: 22px;
+}
+
+.yesno-group {
+  display: flex;
+  gap: 14px;
+}
+
+.yesno-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #49556a;
+}
+
+.yesno-option input {
+  margin: 0;
+  width: auto;
+}
+
+.yesno-option.active {
+  color: var(--navy);
+}
+
+.file-upload-label {
+  display: inline-flex;
+  cursor: pointer;
+}

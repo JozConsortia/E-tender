@@ -18,7 +18,7 @@ router.get('/mine', authenticate, authorize('APPLICANT'), async (req, res) => {
 
 router.post('/', authenticate, authorize('APPLICANT'), async (req, res) => {
   await syncTenderLifecycle()
-  const { tenderId, companyName, documents, bidSummary, technicalApproach, deliveryTimeline, pricingAmount, complianceDeclaration } = req.body ?? {}
+  const { tenderId, companyName, documents, bidSummary, technicalApproach, deliveryTimeline, pricingAmount, complianceDeclaration, quotationDocuments, sbdForm } = req.body ?? {}
   const tender = await prisma.tender.findUnique({ where: { id: tenderId }, include: { requirements: true } })
   if (!tender) return res.status(404).json({ message: 'Tender not found.' })
   if (tender.status !== 'PUBLISHED' || tender.closingDate.getTime() <= Date.now()) return res.status(400).json({ message: 'This tender is not open for applications.' })
@@ -48,6 +48,20 @@ router.post('/', authenticate, authorize('APPLICANT'), async (req, res) => {
   const price = Number(pricingAmount)
   if (!Number.isFinite(price) || price <= 0) return res.status(400).json({ message: 'Provide a valid pricing amount.' })
   if (complianceDeclaration !== true) return res.status(400).json({ message: 'You must declare compliance with the tender terms to submit.' })
+
+  if (quotationDocuments !== undefined && (!Array.isArray(quotationDocuments) || !quotationDocuments.every((d: unknown) => typeof d === 'string'))) {
+    return res.status(400).json({ message: 'Quotation documents must be a list of file names.' })
+  }
+
+  if (!sbdForm || typeof sbdForm !== 'object') return res.status(400).json({ message: 'The SBD bid documents (SBD4, SBD6.1, SBD6.2, SBD8, SBD9) must be completed before submitting.' })
+  if (sbdForm.sbd4?.declarationCertified !== true) return res.status(400).json({ message: 'SBD4 (Declaration of Interest) must be certified before submitting.' })
+  if (sbdForm.sbd61?.certified !== true) return res.status(400).json({ message: 'SBD6.1 (Preference Points Claim) must be certified before submitting.' })
+  if (sbdForm.sbd62?.certified !== true) return res.status(400).json({ message: 'SBD6.2 (Local Production and Content) must be certified before submitting.' })
+  if (sbdForm.sbd8?.certified !== true) return res.status(400).json({ message: 'SBD8 (Declaration of Bidder\'s Past Supply Chain Practices) must be certified before submitting.' })
+  const sbd9 = sbdForm.sbd9 ?? {}
+  if (!sbd9.acknowledgeDisqualification || !sbd9.authorisedToSign || !sbd9.arrivedIndependently || !sbd9.noConsultation || !sbd9.termsNotDisclosed || !sbd9.finalCertification) {
+    return res.status(400).json({ message: 'SBD9 (Certificate of Independent Bid Determination) must be fully certified before submitting.' })
+  }
 
   const existing = await prisma.application.findFirst({ where: { tenderId: tender.id, applicantId: req.user!.id } })
   if (existing) return res.status(409).json({ message: 'You have already applied for this tender.' })
@@ -87,6 +101,8 @@ router.post('/', authenticate, authorize('APPLICANT'), async (req, res) => {
       pricingAmount: price,
       complianceDeclaration: true,
       documents: JSON.stringify(documents.map(String)),
+      quotationDocuments: JSON.stringify(Array.isArray(quotationDocuments) ? quotationDocuments.map(String) : []),
+      sbdForm: JSON.stringify(sbdForm),
       validDocuments: JSON.stringify(validation.validDocuments),
       rejectedDocuments: JSON.stringify(validation.rejectedDocuments),
       missingMandatoryDocuments: JSON.stringify(validation.missingMandatoryDocuments),

@@ -24,6 +24,8 @@ model Application {
   validDocuments            String?  @db.Text
   rejectedDocuments         String?  @db.Text
   missingMandatoryDocuments String?  @db.Text
+  quotationDocuments        String?  @db.Text
+  sbdForm                   String?  @db.Text
   aiScore                   Int?
   aiRecommendation          String?
   aiSummary                 String?  @db.Text

@@ -11,6 +11,16 @@ export function parseJsonArray(value: string | null | undefined): string[] | und
   }
 }
 
+export function parseJsonObject(value: string | null | undefined): Record<string, unknown> | undefined {
+  if (!value) return undefined
+  try {
+    const parsed = JSON.parse(value)
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function toSafeUser(user: User) {
   return {
     id: user.id,
@@ -67,6 +77,8 @@ export function toApplicationDTO(application: Application) {
     validDocuments: parseJsonArray(application.validDocuments),
     rejectedDocuments: parseJsonArray(application.rejectedDocuments),
     missingMandatoryDocuments: parseJsonArray(application.missingMandatoryDocuments),
+    quotationDocuments: parseJsonArray(application.quotationDocuments) ?? [],
+    sbdForm: parseJsonObject(application.sbdForm),
     aiScore: application.aiScore ?? undefined,
     aiRecommendation: application.aiRecommendation ?? undefined,
     aiSummary: application.aiSummary ?? undefined,

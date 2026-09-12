@@ -67,6 +67,91 @@ export interface Tender {
   createdBy: string
 }
 
+export interface SbdPerson {
+  fullName: string
+  idNumber: string
+  taxRef: string
+  stateEmployeeNumber: string
+}
+
+export interface Sbd4Form {
+  fullName: string
+  idNumber: string
+  position: string
+  companyRegNumber: string
+  taxRefNumber: string
+  vatRegNumber: string
+  persons: SbdPerson[]
+  employedByState: boolean | null
+  conductedBusinessWithState: boolean | null
+  relationshipWithStateEvaluator: boolean | null
+  awareOfOtherBidderRelationship: boolean | null
+  interestInOtherBidders: boolean | null
+  declarationSignedBy: string
+  declarationPosition: string
+  declarationDate: string
+  declarationCertified: boolean
+}
+
+export interface Sbd61Form {
+  bbeeStatusLevel: string
+  proofAttached: string
+  pointsClaimed: string
+  subcontracting: boolean | null
+  companyName: string
+  vatNumber: string
+  companyRegNumber: string
+  companyType: string
+  companyClassification: string
+  yearsInBusiness: string
+  principalBusinessActivities: string
+  certified: boolean
+}
+
+export interface Sbd62Form {
+  hasImportedContent: boolean | null
+  bidPriceExclVat: string
+  importedContentRand: string
+  declaredByName: string
+  declaredByCapacity: string
+  certified: boolean
+}
+
+export interface Sbd8Form {
+  convictedFraudCorruption: boolean | null
+  listedTenderDefaulters: boolean | null
+  contractTerminatedPoorPerformance: boolean | null
+  restrictedFromBidding: boolean | null
+  details: string
+  declaredByName: string
+  declaredByPosition: string
+  certified: boolean
+}
+
+export interface Sbd9Form {
+  acknowledgeDisqualification: boolean
+  authorisedToSign: boolean
+  arrivedIndependently: boolean
+  noConsultation: boolean
+  termsNotDisclosed: boolean
+  signedByName: string
+  signedByPosition: string
+  finalCertification: boolean
+}
+
+export interface SbdForm {
+  companyPrice: {
+    companyRegNumber: string
+    vatNumber: string
+  }
+  specification: Record<string, string>
+  sbd4: Sbd4Form
+  sbd61: Sbd61Form
+  sbd62: Sbd62Form
+  sbd8: Sbd8Form
+  sbd9: Sbd9Form
+}
+
 export interface Application {
   id: string
   tenderId: string
@@ -82,6 +167,8 @@ export interface Application {
   pricingAmount?: number
   complianceDeclaration?: boolean
   documents: string[]
+  quotationDocuments?: string[]
+  sbdForm?: SbdForm
   missingMandatoryDocuments?: string[]
   aiScore?: number
   aiRecommendation?: string
