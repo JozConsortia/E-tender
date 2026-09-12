@@ -35,6 +35,7 @@ export default function BecEvaluations() {
         <div className="file-list static">{application.documents.map((file) => <span key={file}>{file}</span>)}</div>
         <h3>AI document assessment</h3>
         <div className="ai-analysis"><div><span>AI recommendation</span><strong>{application.aiRecommendation ?? 'PENDING'}</strong></div><div><span>AI score</span><strong>{application.aiScore ?? '—'}</strong></div><p>{application.aiSummary ?? 'AI processing has not yet been confirmed for this application.'}</p></div>
+        {application.bacNote && <div className="notice warning" style={{ marginTop: 16 }}><strong>Returned by BAC</strong><span>{application.bacNote}</span></div>}
       </div>
       <div className="card">
         <span className="eyebrow">Published scoring framework</span>

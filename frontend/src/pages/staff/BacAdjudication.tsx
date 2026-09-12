@@ -34,6 +34,7 @@ export default function BacAdjudication() {
         <p className="muted">{application.tenderTitle}</p>
         <div className="big-score">{application.finalScore ?? application.aiScore}<small>/100</small></div>
         <div className="mini-metrics"><div>Functionality<strong>{application.functionalityScore ?? '—'}</strong></div><div>Price<strong>{application.priceScore ?? '—'}</strong></div><div>Preference<strong>{application.preferenceScore ?? '—'}</strong></div></div>
+        <div className="decision-records"><div><span>BEC rationale</span><p>{application.becNote ?? 'No BEC rationale has been recorded.'}</p></div></div>
         <h3>Submitted evidence</h3>
         <div className="file-list static">{application.documents.map((document) => <span key={document}>{document}</span>)}</div>
         <div className="notice info"><strong>Separation of duties</strong><span>The BAC records the adjudication rationale. Final award authority remains with the authorised approver.</span></div>
