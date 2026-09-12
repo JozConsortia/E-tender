@@ -2,6 +2,7 @@ import { ChangeEvent, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { isTenderOpenForApplications, isTenderPastClosing, useApp } from '../../context/AppContext'
 import { PageHeader, StatusBadge } from '../../components/Ui'
+import { SignatureField } from '../../components/SignatureField'
 import type { Sbd4Form, Sbd61Form, Sbd62Form, Sbd8Form, Sbd9Form } from '../../types'
 
 const TABS = [
@@ -68,6 +69,7 @@ export default function TenderDetails() {
   const [sbd62, setSbd62] = useState<Sbd62Form>(emptySbd62())
   const [sbd8, setSbd8] = useState<Sbd8Form>(emptySbd8())
   const [sbd9, setSbd9] = useState<Sbd9Form>(emptySbd9())
+  const [signatureStyle, setSignatureStyle] = useState(0)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -141,7 +143,7 @@ export default function TenderDetails() {
       pricingAmount: price,
       complianceDeclaration,
       quotationDocuments: quotationFiles,
-      sbdForm: { companyPrice: { companyRegNumber, vatNumber }, specification, sbd4, sbd61, sbd62, sbd8, sbd9 },
+      sbdForm: { companyPrice: { companyRegNumber, vatNumber }, specification, signatureStyle, sbd4, sbd61, sbd62, sbd8, sbd9 },
     })
     setSubmitting(false)
     if (!result.ok) { setError(result.message ?? 'Your application could not be submitted.'); return }
@@ -249,10 +251,10 @@ export default function TenderDetails() {
 
         <div className="notice warning"><strong>4. Declaration</strong><span>The state may reject the bid or act in terms of paragraph 23 of the General Conditions of Contract should this declaration prove to be false.</span></div>
         <div className="form-grid two">
-          <label>Signed by (full name)<input value={sbd4.declarationSignedBy} onChange={(e) => setSbd4({ ...sbd4, declarationSignedBy: e.target.value })} disabled={disabled} /></label>
           <label>Position<input value={sbd4.declarationPosition} onChange={(e) => setSbd4({ ...sbd4, declarationPosition: e.target.value })} disabled={disabled} /></label>
           <label>Date<input type="date" value={sbd4.declarationDate} onChange={(e) => setSbd4({ ...sbd4, declarationDate: e.target.value })} disabled={disabled} /></label>
         </div>
+        <SignatureField label="Signed by (full name)" value={sbd4.declarationSignedBy} onChange={(v) => setSbd4({ ...sbd4, declarationSignedBy: v })} style={signatureStyle} onStyleChange={setSignatureStyle} disabled={disabled} />
         <label className="inline-checkbox"><input type="checkbox" checked={sbd4.declarationCertified} onChange={(e) => setSbd4({ ...sbd4, declarationCertified: e.target.checked })} disabled={disabled} /> I certify that the information furnished in paragraphs 2 and 3 above is correct.</label>
       </>}
 
@@ -307,10 +309,8 @@ export default function TenderDetails() {
           <label>Local content calculated<input value={localContent !== null ? `${localContent}%` : '—'} disabled readOnly /></label>
         </div>
         <p className="muted" style={{ marginTop: -8 }}>Converted at the SARB rate at 12:00 on the advertisement date.</p>
-        <div className="form-grid two">
-          <label>Declared by (full name)<input value={sbd62.declaredByName} onChange={(e) => setSbd62({ ...sbd62, declaredByName: e.target.value })} disabled={disabled} /></label>
-          <label>In my capacity as<input value={sbd62.declaredByCapacity} onChange={(e) => setSbd62({ ...sbd62, declaredByCapacity: e.target.value })} disabled={disabled} placeholder="Chief financial officer" /></label>
-        </div>
+        <label>In my capacity as<input value={sbd62.declaredByCapacity} onChange={(e) => setSbd62({ ...sbd62, declaredByCapacity: e.target.value })} disabled={disabled} placeholder="Chief financial officer" /></label>
+        <SignatureField label="Declared by (full name)" value={sbd62.declaredByName} onChange={(v) => setSbd62({ ...sbd62, declaredByName: v })} style={signatureStyle} onStyleChange={setSignatureStyle} disabled={disabled} />
         <label className="inline-checkbox"><input type="checkbox" checked={sbd62.certified} onChange={(e) => setSbd62({ ...sbd62, certified: e.target.checked })} disabled={disabled} /> The facts are within my own personal knowledge, the goods comply with the minimum local content requirements as measured under SATS 1286:2011, and I accept that the procurement authority may require the local content to be verified.</label>
       </>}
 
@@ -322,10 +322,8 @@ export default function TenderDetails() {
         <div className="score-row"><span>Was any contract between the bidder and an organ of state terminated in the past five years due to poor performance?</span><YesNo value={sbd8.contractTerminatedPoorPerformance} onChange={(v) => setSbd8({ ...sbd8, contractTerminatedPoorPerformance: v })} /></div>
         <div className="score-row"><span>Is the bidder or any of its directors currently restricted from doing business with the public sector?</span><YesNo value={sbd8.restrictedFromBidding} onChange={(v) => setSbd8({ ...sbd8, restrictedFromBidding: v })} /></div>
         <label>If you answered "Yes" to any question above, provide details<textarea rows={3} value={sbd8.details} onChange={(e) => setSbd8({ ...sbd8, details: e.target.value })} disabled={disabled} /></label>
-        <div className="form-grid two">
-          <label>Declared by (full name)<input value={sbd8.declaredByName} onChange={(e) => setSbd8({ ...sbd8, declaredByName: e.target.value })} disabled={disabled} /></label>
-          <label>Position<input value={sbd8.declaredByPosition} onChange={(e) => setSbd8({ ...sbd8, declaredByPosition: e.target.value })} disabled={disabled} /></label>
-        </div>
+        <label>Position<input value={sbd8.declaredByPosition} onChange={(e) => setSbd8({ ...sbd8, declaredByPosition: e.target.value })} disabled={disabled} /></label>
+        <SignatureField label="Declared by (full name)" value={sbd8.declaredByName} onChange={(v) => setSbd8({ ...sbd8, declaredByName: v })} style={signatureStyle} onStyleChange={setSignatureStyle} disabled={disabled} />
         <label className="inline-checkbox"><input type="checkbox" checked={sbd8.certified} onChange={(e) => setSbd8({ ...sbd8, certified: e.target.checked })} disabled={disabled} /> I certify that the information furnished in this declaration is true and correct, and understand that any false declaration is grounds for disqualification or cancellation of the contract.</label>
       </>}
 
@@ -338,10 +336,8 @@ export default function TenderDetails() {
         <label className="inline-checkbox"><input type="checkbox" checked={sbd9.arrivedIndependently} onChange={(e) => setSbd9({ ...sbd9, arrivedIndependently: e.target.checked })} disabled={disabled} /> The bidder has arrived at this bid independently from, and without consultation, communication, agreement or arrangement with, any competitor.</label>
         <label className="inline-checkbox"><input type="checkbox" checked={sbd9.noConsultation} onChange={(e) => setSbd9({ ...sbd9, noConsultation: e.target.checked })} disabled={disabled} /> There has been no consultation, communication, agreement or arrangement with any competitor regarding prices, market allocation, pricing methods, the intention to submit a bid, a bid that does not meet the specifications, or bidding with the intention not to win.</label>
         <label className="inline-checkbox"><input type="checkbox" checked={sbd9.termsNotDisclosed} onChange={(e) => setSbd9({ ...sbd9, termsNotDisclosed: e.target.checked })} disabled={disabled} /> The terms of this bid have not been and will not be disclosed to any competitor before the official bid opening or the awarding of the contract.</label>
-        <div className="form-grid two">
-          <label>Signed by (full name)<input value={sbd9.signedByName} onChange={(e) => setSbd9({ ...sbd9, signedByName: e.target.value })} disabled={disabled} /></label>
-          <label>Position<input value={sbd9.signedByPosition} onChange={(e) => setSbd9({ ...sbd9, signedByPosition: e.target.value })} disabled={disabled} /></label>
-        </div>
+        <label>Position<input value={sbd9.signedByPosition} onChange={(e) => setSbd9({ ...sbd9, signedByPosition: e.target.value })} disabled={disabled} /></label>
+        <SignatureField label="Signed by (full name)" value={sbd9.signedByName} onChange={(v) => setSbd9({ ...sbd9, signedByName: v })} style={signatureStyle} onStyleChange={setSignatureStyle} disabled={disabled} />
         <label className="inline-checkbox"><input type="checkbox" checked={sbd9.finalCertification} onChange={(e) => setSbd9({ ...sbd9, finalCertification: e.target.checked })} disabled={disabled} /> I certify the statements above to be true and complete in every respect, and I am aware that suspicious bids are reported to the Competition Commission and may be referred for criminal investigation.</label>
       </>}
 

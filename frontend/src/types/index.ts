@@ -145,6 +145,7 @@ export interface SbdForm {
     vatNumber: string
   }
   specification: Record<string, string>
+  signatureStyle?: number
   sbd4: Sbd4Form
   sbd61: Sbd61Form
   sbd62: Sbd62Form

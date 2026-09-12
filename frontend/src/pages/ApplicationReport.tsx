@@ -1,6 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { PageHeader, StatusBadge } from '../components/Ui'
+import { signatureFontFamily } from '../components/SignatureField'
+
+const Signature = ({ name, style }: { name?: string; style?: number }) =>
+  name ? <span className="report-signature" style={{ fontFamily: signatureFontFamily(style) }}>{name}</span> : <>—</>
 
 const statusTone = (status: string) => {
   if (status === 'SUCCESSFUL' || status === 'SHORTLISTED') return 'success' as const
@@ -84,7 +88,7 @@ export default function ApplicationReport() {
           <div className="report-field"><span>Relationship with a state evaluator</span><p>{application.sbdForm.sbd4.relationshipWithStateEvaluator ? 'Yes' : 'No'}</p></div>
           <div className="report-field"><span>Aware of another bidder's relationship</span><p>{application.sbdForm.sbd4.awareOfOtherBidderRelationship ? 'Yes' : 'No'}</p></div>
           <div className="report-field"><span>Interest in other related bidders</span><p>{application.sbdForm.sbd4.interestInOtherBidders ? 'Yes' : 'No'}</p></div>
-          <div className="report-field"><span>Declared and certified by</span><p>{application.sbdForm.sbd4.declarationSignedBy || '—'} ({application.sbdForm.sbd4.declarationPosition || '—'}) — {application.sbdForm.sbd4.declarationCertified ? 'Certified' : 'Not certified'}</p></div>
+          <div className="report-field"><span>Declared and certified by</span><p><Signature name={application.sbdForm.sbd4.declarationSignedBy} style={application.sbdForm.signatureStyle} /> ({application.sbdForm.sbd4.declarationPosition || '—'}) — {application.sbdForm.sbd4.declarationCertified ? 'Certified' : 'Not certified'}</p></div>
         </div>
         {application.sbdForm.sbd4.persons.length > 0 && <div className="file-list static">{application.sbdForm.sbd4.persons.map((p, i) => <span key={i}>{p.fullName || 'Unnamed'}{p.stateEmployeeNumber ? ` (state: ${p.stateEmployeeNumber})` : ''}</span>)}</div>}
         {(application.sbdForm.sbd4.employedByState || application.sbdForm.sbd4.conductedBusinessWithState || application.sbdForm.sbd4.relationshipWithStateEvaluator || application.sbdForm.sbd4.awareOfOtherBidderRelationship || application.sbdForm.sbd4.interestInOtherBidders) && <div className="notice warning" style={{ marginTop: 12 }}><strong>Review flag</strong><span>One or more SBD4 conflict-of-interest questions were answered "Yes" — verify before proceeding.</span></div>}
@@ -107,7 +111,7 @@ export default function ApplicationReport() {
         <div className="report-grid">
           <div className="report-field"><span>Imported content declared</span><p>{application.sbdForm.sbd62.hasImportedContent ? 'Yes' : 'No'}</p></div>
           <div className="report-field"><span>Bid price excl. VAT / imported content</span><p>R {application.sbdForm.sbd62.bidPriceExclVat || '0'} / R {application.sbdForm.sbd62.importedContentRand || '0'}</p></div>
-          <div className="report-field"><span>Declared by</span><p>{application.sbdForm.sbd62.declaredByName || '—'} ({application.sbdForm.sbd62.declaredByCapacity || '—'})</p></div>
+          <div className="report-field"><span>Declared by</span><p><Signature name={application.sbdForm.sbd62.declaredByName} style={application.sbdForm.signatureStyle} /> ({application.sbdForm.sbd62.declaredByCapacity || '—'})</p></div>
         </div>
       </div>
 
@@ -120,12 +124,15 @@ export default function ApplicationReport() {
           <div className="report-field"><span>Currently restricted from public sector business</span><p>{application.sbdForm.sbd8.restrictedFromBidding ? 'Yes' : 'No'}</p></div>
         </div>
         {application.sbdForm.sbd8.details && <p>{application.sbdForm.sbd8.details}</p>}
+        <p><strong>Declared by:</strong> <Signature name={application.sbdForm.sbd8.declaredByName} style={application.sbdForm.signatureStyle} /> ({application.sbdForm.sbd8.declaredByPosition || '—'})</p>
         {(application.sbdForm.sbd8.convictedFraudCorruption || application.sbdForm.sbd8.listedTenderDefaulters || application.sbdForm.sbd8.contractTerminatedPoorPerformance || application.sbdForm.sbd8.restrictedFromBidding) && <div className="notice warning"><strong>Review flag</strong><span>One or more SBD8 past-practice questions were answered "Yes" — verify before proceeding.</span></div>}
       </div>
 
       <div className="card report-section">
         <h3>SBD 9 — Certificate of independent bid determination</h3>
-        <p>{application.sbdForm.sbd9.finalCertification ? `Certified independent by ${application.sbdForm.sbd9.signedByName || 'the bidder'} (${application.sbdForm.sbd9.signedByPosition || '—'}).` : 'Not certified.'}</p>
+        {application.sbdForm.sbd9.finalCertification
+          ? <p>Certified independent by <Signature name={application.sbdForm.sbd9.signedByName} style={application.sbdForm.signatureStyle} /> ({application.sbdForm.sbd9.signedByPosition || '—'}).</p>
+          : <p>Not certified.</p>}
       </div>
     </>}
 

@@ -1839,3 +1839,50 @@ table tbody tr:hover {
   display: inline-flex;
   cursor: pointer;
 }
+
+.signature-field {
+  margin-top: 14px;
+}
+
+.signature-preview {
+  margin-top: 10px;
+  padding: 16px 18px;
+  border: 1px dashed #b9c8d6;
+  border-radius: 10px;
+  background: #fbfcfe;
+  font-size: 30px;
+  color: var(--navy);
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.signature-style-picker {
+  margin-top: 10px;
+}
+
+.signature-style-picker > .muted {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.signature-style-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.signature-style {
+  flex: 1 1 140px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 20px;
+  color: #384a5e;
+}
+
+.signature-style.active {
+  border-color: var(--navy);
+  background: #f2f6fb;
+  box-shadow: 0 0 0 2px #0066a11c;
+}
