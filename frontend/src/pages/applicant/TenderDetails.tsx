@@ -365,7 +365,7 @@ export default function TenderDetails() {
 
       {error && <div className="error-box" style={{ marginTop: 16 }}>{error}</div>}
       {!already && canApply && <WizardNav />}
-      {!canApply && activeTab !== 'review' && !already && <div className="form-actions"><button type="button" className="button secondary" onClick={() => navigate('/applicant/tenders')}>Back to tenders</button></div>}
+      {!canApply && !already && <div className="form-actions"><button type="button" className="button secondary" onClick={() => navigate('/applicant/tenders')}>Back to tenders</button></div>}
     </div>
   </>
 }
