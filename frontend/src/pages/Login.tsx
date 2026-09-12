@@ -9,6 +9,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const state = location.state as { message?: string; variant?: 'error' | 'success' } | null
   const message = state?.message
 
@@ -26,8 +27,11 @@ export default function Login() {
       <Link to="/" className="brand"><span className="brand-mark logo-mark"><img src="/mpumalanga-logo.jpeg" alt="Mpumalanga Provincial Government" /></span><span><strong>Mpumalanga Provincial Treasury</strong><small>Procurement Portal</small></span></Link>
       <div className="login-copy"><span className="eyebrow">Secure access</span><h1>Sign in to your workspace.</h1><p>Enter your credentials to access your authorised procurement workspace.</p></div>
       <form onSubmit={submit} className="login-form">
-        <label>Email<input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required autoFocus /></label>
-        <label>Password<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required /></label>
+        <label>Email<input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="email" required autoFocus /></label>
+        <label>Password<div className="password-field">
+          <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? 'text' : 'password'} autoComplete="current-password" required />
+          <button type="button" className="password-toggle" onClick={() => setShowPassword((v) => !v)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? 'Hide' : 'Show'}</button>
+        </div></label>
         {error && <div className="error-box">{error}</div>}
         {message && <div className={state?.variant === 'error' ? 'error-box' : 'success-box'}>{message}</div>}
         <button className="button primary full large" type="submit">Sign in</button>

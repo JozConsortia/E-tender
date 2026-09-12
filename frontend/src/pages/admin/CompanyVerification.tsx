@@ -47,8 +47,13 @@ export default function CompanyVerification() {
         <p><strong>Declared director:</strong> {(applicant.directors ?? []).join(', ') || 'Not declared'}</p>
         <div className="file-list static">{(applicant.verificationDocuments ?? []).map((document) => <span key={document}>{document}</span>)}</div>
         {conflict && <div className="error-box">A staff account matches a declared director. This company cannot be approved or allowed to apply while the conflict exists.</div>}
-        {status === 'PENDING' && <><label>Review note<textarea rows={3} value={notes[applicant.id] ?? ''} onChange={(event) => setNotes({ ...notes, [applicant.id]: event.target.value })} placeholder="Record verification findings..." /></label><div className="form-actions"><button className="button secondary" onClick={async () => { await verifyApplicant(applicant.id, 'REJECTED', notes[applicant.id]) }}>Reject</button><button className="button primary" disabled={conflict} onClick={async () => { await verifyApplicant(applicant.id, 'APPROVED', notes[applicant.id]) }}>Approve company</button></div></>}
         {status !== 'PENDING' && applicant.verificationNote && <p className="muted">Review note: {applicant.verificationNote}</p>}
+        {status === 'REJECTED' && applicant.verificationNote?.startsWith('Automatically rejected by AI document screening') && <div className="notice warning"><strong>AI auto-rejection</strong><span>This registration was rejected automatically. Review the note above and override below if this looks like a false positive.</span></div>}
+        <label>Review note<textarea rows={3} value={notes[applicant.id] ?? ''} onChange={(event) => setNotes({ ...notes, [applicant.id]: event.target.value })} placeholder="Record verification findings..." /></label>
+        <div className="form-actions">
+          <button className="button secondary" onClick={async () => { await verifyApplicant(applicant.id, 'REJECTED', notes[applicant.id]) }}>{status === 'REJECTED' ? 'Keep rejected' : 'Reject'}</button>
+          <button className="button primary" disabled={conflict} onClick={async () => { await verifyApplicant(applicant.id, 'APPROVED', notes[applicant.id]) }}>{status === 'APPROVED' ? 'Re-confirm approval' : status === 'REJECTED' ? 'Override and approve' : 'Approve company'}</button>
+        </div>
       </div>
     })}</div>
   </>

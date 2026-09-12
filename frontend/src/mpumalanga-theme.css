@@ -186,6 +186,29 @@ body {
   box-shadow: 0 0 0 3px #0066a11c;
 }
 
+.password-field {
+  position: relative;
+  margin-top: 6px;
+}
+
+.password-field input {
+  margin-top: 0 !important;
+  padding-right: 56px !important;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  padding: 6px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #35679e;
+}
+
 .app-shell {
   background: #f4f7f8;
 }

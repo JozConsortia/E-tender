@@ -19,6 +19,7 @@ export default function Signup() {
   const [documents, setDocuments] = useState<Record<string, File>>({})
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -54,11 +55,14 @@ export default function Signup() {
       <Link to="/" className="brand"><span className="brand-mark logo-mark"><img src="/mpumalanga-logo.jpeg" alt="Mpumalanga Provincial Government" /></span><span><strong>Mpumalanga Provincial Treasury</strong><small>Procurement Portal</small></span></Link>
       <div className="login-copy"><span className="eyebrow">Supplier onboarding</span><h1>Register your company.</h1><p>Submit your company details and supporting documents for verification before responding to tenders.</p></div>
       <form onSubmit={submit} className="login-form">
-        <label>Contact name<input value={name} onChange={(event) => setName(event.target.value)} required /></label>
-        <label>Company name<input value={organisation} onChange={(event) => setOrganisation(event.target.value)} required /></label>
-        <label>Company director<input value={director} onChange={(event) => setDirector(event.target.value)} required placeholder="Director listed for the applying company" /></label>
-        <label>Email address<input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required /></label>
-        <label>Password<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" minLength={8} required /></label>
+        <label>Contact name<input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" required /></label>
+        <label>Company name<input value={organisation} onChange={(event) => setOrganisation(event.target.value)} autoComplete="organization" required /></label>
+        <label>Company director<input value={director} onChange={(event) => setDirector(event.target.value)} autoComplete="off" required placeholder="Director listed for the applying company" /></label>
+        <label>Email address<input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" required /></label>
+        <label>Password<div className="password-field">
+          <input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} required />
+          <button type="button" className="password-toggle" onClick={() => setShowPassword((v) => !v)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? 'Hide' : 'Show'}</button>
+        </div></label>
         <div className="upload-box">
           <strong>Company documents</strong>
           <small>Upload each document below (PDF, JPG or PNG). AI screens each document against the type expected before your registration is submitted for human review.</small>
