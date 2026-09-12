@@ -1,9 +1,8 @@
-import { FormEvent, useState } from 'react'
+import { ChangeEvent, FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 
 const requiredDocuments = ['Company Registration', 'Tax Compliance Certificate', 'B-BBEE Certificate']
-const slug = (title: string) => title.trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '')
 
 export default function Signup() {
   const { registerApplicant } = useApp()
@@ -27,7 +26,11 @@ export default function Signup() {
     navigate('/login', { state: { message: 'Registration submitted. Your company must be approved before you can apply for tenders.' } })
   }
 
-  const attachDocument = (document: string) => setDocuments((current) => ({ ...current, [document]: `${slug(document)}.pdf` }))
+  const attachDocument = (document: string, event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) setDocuments((current) => ({ ...current, [document]: file.name }))
+    event.target.value = ''
+  }
   const removeDocument = (document: string) => setDocuments((current) => { const next = { ...current }; delete next[document]; return next })
 
   return <div className="login-page">
@@ -42,12 +45,15 @@ export default function Signup() {
         <label>Password<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" minLength={8} required /></label>
         <div className="upload-box">
           <strong>Company documents</strong>
-          <small>Attach each document below. This demo does not store real files — attaching simulates submitting the document for review.</small>
+          <small>Upload each document below (PDF, JPG or PNG). The file name is recorded against your registration for verification.</small>
           {requiredDocuments.map((document) => <div className="attach-row" key={document}>
             <span>{document}</span>
             {documents[document]
               ? <span className="file-chip">{documents[document]}<button type="button" onClick={() => removeDocument(document)} aria-label={`Remove ${document}`}>×</button></span>
-              : <button type="button" className="button secondary small" onClick={() => attachDocument(document)}>+ Attach document</button>}
+              : <label className="button secondary small file-upload-label">
+                  + Upload document
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(event) => attachDocument(document, event)} hidden />
+                </label>}
           </div>)}
         </div>
         {error && <div className="error-box">{error}</div>}
