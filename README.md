@@ -53,15 +53,23 @@ Application: SUBMITTED -> UNDER_EVALUATION -> SHORTLISTED -> SUCCESSFUL / UNSUCC
 
 The tender and its applications advance together — a tender only reaches ADJUDICATION once every one of its applications has reached a resolved state (`SHORTLISTED`, `SUCCESSFUL` or `UNSUCCESSFUL`), and only reaches AWARDED once the Approver signs off. `REVIEW_REQUIRED` is deliberately **not** a resolved state: it means BEC still has work to do on that bid, so the tender stays in EVALUATION — and stays visible in BEC's queue — until BEC re-scores it. An application rejected at submission (missing mandatory evidence) does **not** block sibling bids on the same tender from proceeding. `POST /api/tenders/:id/advance` lets an admin force the next transition in a demo/testing context without waiting for a real closing date.
 
-## Applicant bid form
+## Supplier registration and AI document screening
 
-Submitting a bid requires:
-- **Bid summary** and **technical approach** (free text, min. 20 characters each)
-- **Delivery timeline** and **total price**
-- **Compliance declaration** (checkbox — bidder confirms compliance with tender terms)
-- One attached document per published requirement (PDF/JPG/PNG)
+Registering as a supplier (`/signup`) requires uploading three real files — Company Registration, Tax Compliance Certificate, and B-BBEE Certificate (PDF/JPG/PNG). Each file is sent to the backend and analysed by Google Gemini (document type, extracted details, readability, and whether it appears authentic), then checked against the category it was uploaded for. If any document is the wrong type, unreadable, or flagged as not authentic, the registration is **rejected immediately** (verification status `REJECTED`, with the AI's reasoning recorded) and a Security Alert is raised — rather than sitting in the admin's queue as a normal pending request. If every document passes, the account proceeds to `PENDING` for the usual human verification step. If Gemini is unavailable, the check is skipped and the registration falls back to `PENDING` rather than blocking sign-ups.
 
-On submission, a lightweight keyword-matching AI check compares attached document filenames against the tender's published requirements. If any mandatory requirement has no matching evidence, the application is **rejected immediately** — status `UNSUCCESSFUL`, with the missing items recorded — and the applicant sees this as a final outcome straight away (My Applications / Outcomes) rather than waiting on a committee. If all mandatory evidence is present, the bid proceeds normally into the evaluation pipeline. BEC, BAC and the Approver can each open a print-friendly **bid report** (`/applications/:id/report`) showing the full form, documents, and AI/committee notes — "Print / Save as PDF" uses the browser's native print dialog.
+## Applicant bid form (SBD wizard)
+
+Submitting a bid is a multi-step wizard modelled on the real South African Standard Bidding Documents:
+- **Company and price** — company registration/VAT numbers, delivery timeline, total price, and an optional quotation upload (real files, multiple)
+- **Specification** — bid summary, technical approach, and a line-item table against the tender's published requirements, each with an attached document (PDF/JPG/PNG)
+- **SBD 4** — Declaration of Interest (conflicts with state employees, related bidders)
+- **SBD 6.1** — Preference points claim (B-BBEE status, sub-contracting)
+- **SBD 6.2** — Local production and content (with a live-calculated local content percentage)
+- **SBD 8** — Declaration of the bidder's past supply chain practices
+- **SBD 9** — Certificate of Independent Bid Determination — the anti-collusion "oath". All five statements plus final certification are enforced **server-side**, not just in the UI
+- **Review and submit** — a completeness checklist per section before the bid can be submitted
+
+On submission, a lightweight keyword-matching AI check compares attached document filenames against the tender's published requirements. If any mandatory requirement has no matching evidence, the application is **rejected immediately** — status `UNSUCCESSFUL`, with the missing items recorded — and the applicant sees this as a final outcome straight away (My Applications / Outcomes) rather than waiting on a committee. If all mandatory evidence is present, the bid proceeds normally into the evaluation pipeline. BEC, BAC and the Approver can each open a print-friendly **bid report** (`/applications/:id/report`) showing the full form (including every SBD section), documents, and AI/committee notes — "Print / Save as PDF" uses the browser's native print dialog.
 
 ## AI Document Assessment (admin tool)
 
@@ -79,6 +87,7 @@ The backend raises a `SecurityAlert` (visible to admins under **Security Alerts*
 | A company receives its 3rd (or later) award | MEDIUM |
 | A company is awarded despite a prior unresolved director-conflict flag against it | HIGH |
 | A company's registered name is changed by an admin | MEDIUM |
+| A registration document fails AI screening (wrong type, unreadable, or not authentic) | HIGH |
 
 Alerts are always recorded in-app. If `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/`ALERT_EMAIL_TO` are set in `backend/.env`, each alert is also emailed; otherwise the backend logs a one-time console warning and continues in-app-only.
 

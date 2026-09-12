@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { apiFetch, TOKEN_KEY } from '../api'
+import { API_BASE, apiFetch, TOKEN_KEY } from '../api'
 import { demoApplications, demoAuditLogs, demoTenders, demoUsers } from '../data/demo'
 import type { Application, AuditEntry, DemoUser, Role, SbdForm, SecurityAlert, Tender, TenderRequirement, EvaluationCriterion, VerificationStatus } from '../types'
 
@@ -13,7 +13,7 @@ interface AppContextValue {
   alerts: SecurityAlert[]
   ready: boolean
   login: (email: string, password: string) => Promise<Result>
-  registerApplicant: (input: { name: string; email: string; password: string; organisation: string; director: string; documents: string[] }) => Promise<Result>
+  registerApplicant: (input: { name: string; email: string; password: string; organisation: string; director: string; companyRegistrationDoc: File; taxComplianceDoc: File; bbeeCertificateDoc: File }) => Promise<Result>
   verifyApplicant: (userId: string, status: VerificationStatus, note?: string) => Promise<Result>
   renameCompany: (userId: string, organisation: string) => Promise<Result>
   logout: () => void
@@ -80,8 +80,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = () => { localStorage.removeItem(TOKEN_KEY); setCurrentUser(null) }
 
   const registerApplicant = async (input: Parameters<AppContextValue['registerApplicant']>[0]): Promise<Result> => {
-    try { await apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(input) }); await refreshPublicTenders(); return { ok: true } }
-    catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'Registration failed.' } }
+    try {
+      const formData = new FormData()
+      formData.append('name', input.name)
+      formData.append('email', input.email)
+      formData.append('password', input.password)
+      formData.append('organisation', input.organisation)
+      formData.append('director', input.director)
+      formData.append('companyRegistrationDoc', input.companyRegistrationDoc)
+      formData.append('taxComplianceDoc', input.taxComplianceDoc)
+      formData.append('bbeeCertificateDoc', input.bbeeCertificateDoc)
+
+      const response = await fetch(`${API_BASE}/auth/register`, { method: 'POST', body: formData })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.message || 'Registration failed.')
+      await refreshPublicTenders()
+      return { ok: true, user: data.user }
+    } catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'Registration failed.' } }
   }
 
   const verifyApplicant = async (userId: string, status: VerificationStatus, note = ''): Promise<Result> => {

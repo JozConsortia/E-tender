@@ -2,7 +2,11 @@ import { ChangeEvent, FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 
-const requiredDocuments = ['Company Registration', 'Tax Compliance Certificate', 'B-BBEE Certificate']
+const requiredDocuments = [
+  { label: 'Company Registration', field: 'companyRegistrationDoc' },
+  { label: 'Tax Compliance Certificate', field: 'taxComplianceDoc' },
+  { label: 'B-BBEE Certificate', field: 'bbeeCertificateDoc' },
+] as const
 
 export default function Signup() {
   const { registerApplicant } = useApp()
@@ -12,26 +16,38 @@ export default function Signup() {
   const [director, setDirector] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [documents, setDocuments] = useState<Record<string, string>>({})
+  const [documents, setDocuments] = useState<Record<string, File>>({})
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (requiredDocuments.some((document) => !documents[document])) {
+    if (requiredDocuments.some((document) => !documents[document.field])) {
       setError('Attach each required company document before submitting for review.')
       return
     }
-    const result = await registerApplicant({ name, email, password, organisation, director, documents: requiredDocuments.map((document) => documents[document]) })
+    setSubmitting(true)
+    const result = await registerApplicant({
+      name, email, password, organisation, director,
+      companyRegistrationDoc: documents.companyRegistrationDoc,
+      taxComplianceDoc: documents.taxComplianceDoc,
+      bbeeCertificateDoc: documents.bbeeCertificateDoc,
+    })
+    setSubmitting(false)
     if (!result.ok) { setError(result.message ?? 'Registration could not be completed.'); return }
-    navigate('/login', { state: { message: 'Registration submitted. Your company must be approved before you can apply for tenders.' } })
+
+    const rejected = result.user?.verificationStatus === 'REJECTED'
+    navigate('/login', { state: rejected
+      ? { message: `Registration could not be verified. ${result.user?.verificationNote ?? 'One or more documents failed AI screening.'}`, variant: 'error' }
+      : { message: 'Registration submitted. Your company must be approved before you can apply for tenders.' } })
   }
 
-  const attachDocument = (document: string, event: ChangeEvent<HTMLInputElement>) => {
+  const attachDocument = (field: string, event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) setDocuments((current) => ({ ...current, [document]: file.name }))
+    if (file) setDocuments((current) => ({ ...current, [field]: file }))
     event.target.value = ''
   }
-  const removeDocument = (document: string) => setDocuments((current) => { const next = { ...current }; delete next[document]; return next })
+  const removeDocument = (field: string) => setDocuments((current) => { const next = { ...current }; delete next[field]; return next })
 
   return <div className="login-page">
     <div className="login-panel signup-panel">
@@ -45,19 +61,19 @@ export default function Signup() {
         <label>Password<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" minLength={8} required /></label>
         <div className="upload-box">
           <strong>Company documents</strong>
-          <small>Upload each document below (PDF, JPG or PNG). The file name is recorded against your registration for verification.</small>
-          {requiredDocuments.map((document) => <div className="attach-row" key={document}>
-            <span>{document}</span>
-            {documents[document]
-              ? <span className="file-chip">{documents[document]}<button type="button" onClick={() => removeDocument(document)} aria-label={`Remove ${document}`}>×</button></span>
+          <small>Upload each document below (PDF, JPG or PNG). AI screens each document against the type expected before your registration is submitted for human review.</small>
+          {requiredDocuments.map((document) => <div className="attach-row" key={document.field}>
+            <span>{document.label}</span>
+            {documents[document.field]
+              ? <span className="file-chip">{documents[document.field].name}<button type="button" onClick={() => removeDocument(document.field)} aria-label={`Remove ${document.label}`}>×</button></span>
               : <label className="button secondary small file-upload-label">
                   + Upload document
-                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(event) => attachDocument(document, event)} hidden />
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(event) => attachDocument(document.field, event)} hidden />
                 </label>}
           </div>)}
         </div>
         {error && <div className="error-box">{error}</div>}
-        <button className="button primary full large" type="submit">Submit company for verification</button>
+        <button className="button primary full large" type="submit" disabled={submitting}>{submitting ? 'Screening documents with AI...' : 'Submit company for verification'}</button>
       </form>
       <Link to="/login" className="back-link">Already registered? Sign in</Link>
     </div>

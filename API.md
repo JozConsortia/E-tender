@@ -14,7 +14,7 @@ All endpoints except the public ones below require `Authorization: Bearer <token
 
 - `POST /auth/login` — `{ email, password }` → `{ token, user }`. Locks the account for 15 minutes after 5 consecutive failures and raises a Security Alert.
 - `GET /auth/me` — the authenticated user's profile.
-- `POST /auth/register` — `{ name, email, password, organisation, director, documents: string[3] }` — registers a new APPLICANT (verification status `PENDING`). Rejects and alerts if the declared director matches a staff account.
+- `POST /auth/register` — `multipart/form-data`: `name, email, password, organisation, director` fields plus three files (`companyRegistrationDoc`, `taxComplianceDoc`, `bbeeCertificateDoc`; PDF/JPG/PNG). Rejects and alerts if the declared director matches a staff account. Each document is analysed by Gemini (type, authenticity, readability) and compared against its expected category; if any document fails, the account is created with verification status `REJECTED` and a note explaining why (and a Security Alert is raised) instead of the normal `PENDING`.
 
 ## Applicant
 

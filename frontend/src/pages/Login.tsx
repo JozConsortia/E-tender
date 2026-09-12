@@ -9,7 +9,8 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const message = (location.state as { message?: string } | null)?.message
+  const state = location.state as { message?: string; variant?: 'error' | 'success' } | null
+  const message = state?.message
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -28,7 +29,7 @@ export default function Login() {
         <label>Email<input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required autoFocus /></label>
         <label>Password<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required /></label>
         {error && <div className="error-box">{error}</div>}
-        {message && <div className="success-box">{message}</div>}
+        {message && <div className={state?.variant === 'error' ? 'error-box' : 'success-box'}>{message}</div>}
         <button className="button primary full large" type="submit">Sign in</button>
       </form>
       <Link to="/signup" className="button secondary full">Register as a supplier</Link>
